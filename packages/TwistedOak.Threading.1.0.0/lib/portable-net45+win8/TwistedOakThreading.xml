@@ -1,0 +1,416 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TwistedOakThreading</name>
+    </assembly>
+    <members>
+        <member name="T:TwistedOak.Threading.AnonymousAwaitable`1">
+            <summary>A custom generic IAwaitable, implemented with delegates passed to the constructor.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.IAwaitable`1">
+            <summary>Can be awaited, in order to get a value.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.IAwaitable`1.GetAwaiter">
+            <summary>Gets an awaiter to handle awaiting.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaitable`1.#ctor(System.Func{TwistedOak.Threading.IAwaiter{`0}})">
+            <summary>Creates an awaitable based on the given delegate.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaitable`1.GetAwaiter">
+            <summary>Gets an awaiter to handle awaiting.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.AnonymousAwaitable">
+            <summary>A custom void IAwaitable, implemented with delegates passed to the constructor.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.IAwaitable">
+            <summary>Can be awaited, without getting a value.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.IAwaitable.GetAwaiter">
+            <summary>Gets an awaiter to handle awaiting.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaitable.#ctor(System.Func{TwistedOak.Threading.IAwaiter})">
+            <summary>Creates an awaitable based on the given delegate.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaitable.GetAwaiter">
+            <summary>Gets an awaiter to handle awaiting.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.AnonymousAwaiter`1">
+            <summary>A custom generic IAwaiter, implemented with delegates passed to the constructor.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.IAwaiter`1">
+            <summary>Handles awaiting, in order to get a value.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.IAwaiter`1.GetResult">
+            <summary>Gets the awaited result, rethrowing any exceptions.</summary>
+        </member>
+        <member name="P:TwistedOak.Threading.IAwaiter`1.IsCompleted">
+            <summary>Determines if OnCompleted needs to be called or not, in order to access the result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaiter`1.#ctor(System.Func{System.Boolean},System.Action{System.Action},System.Func{`0})">
+            <summary>Creates an awaiter based on the given delegates.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaiter`1.OnCompleted(System.Action)">
+            <summary>Registers a callback to run when the awaited thing has completed, or to run immediately if it has already completed.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaiter`1.GetResult">
+            <summary>Gets the awaited result, rethrowing any exceptions.</summary>
+        </member>
+        <member name="P:TwistedOak.Threading.AnonymousAwaiter`1.IsCompleted">
+            <summary>Determines if OnCompleted needs to be called or not, in order to access the result.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.AnonymousAwaiter">
+            <summary>A custom void IAwaiter, implemented with delegates passed to the constructor.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.IAwaiter">
+            <summary>Handles awaiting, without getting a value.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.IAwaiter.GetResult">
+            <summary>Rethrows any exception from the awaited operation.</summary>
+        </member>
+        <member name="P:TwistedOak.Threading.IAwaiter.IsCompleted">
+            <summary>Determines if OnCompleted needs to be called or not, in order to access the result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaiter.#ctor(System.Func{System.Boolean},System.Action{System.Action},System.Action)">
+            <summary>Creates an awaiter based on the given delegates.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaiter.OnCompleted(System.Action)">
+            <summary>Registers a callback to run when the awaited thing has completed, or to run immediately if it has already completed.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousAwaiter.GetResult">
+            <summary>Rethrows any exception from the awaited operation.</summary>
+        </member>
+        <member name="P:TwistedOak.Threading.AnonymousAwaiter.IsCompleted">
+            <summary>Determines if OnCompleted needs to be called or not, in order to access the result.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.AnonymousSynchronizationContext">
+            <summary>
+            A custom synchronization context, implemented with a post delegate passed to the constructor.
+            Automatically exposes itself as the current synchronization context, when running posted methods.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousSynchronizationContext.#ctor(System.Action{System.Action})">
+            <summary>Creates a custom synchronization context based on the given posting action.</summary>
+            <param name="post">
+            Used to run actions posted to the synchronization context.
+            Actions passed to this method wrap callbacks posted to the created context, and take care of exposing the correct synchronization context.
+            </param>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousSynchronizationContext.Post(System.Threading.SendOrPostCallback,System.Object)">
+            <summary>Dispatches an asynchronous message to the anonymous synchronization context.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousSynchronizationContext.Send(System.Threading.SendOrPostCallback,System.Object)">
+            <summary>Not supported.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AnonymousSynchronizationContext.CreateCopy">
+            <summary>Returns the anonymous synchronization context, unchanged.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.AwaitableExtensions">
+            <summary>Contains extensions methods related to awaitables.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AwaitableExtensions.AsTask(TwistedOak.Threading.IAwaitable)">
+            <summary>A task that completes with the same result as a given awaitable.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AwaitableExtensions.AsTask``1(TwistedOak.Threading.IAwaitable{``0})">
+            <summary>A task that completes with the same result as a given awaitable.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AwaitableExtensions.AsIAwaitable``1(System.Threading.Tasks.Task{``0})">
+            <summary>An awaitable that completes with the same result as a given task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.AwaitableExtensions.AsIAwaitable(System.Threading.Tasks.Task)">
+            <summary>An awaitable that completes with the same result as a given task.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.DiscardRedundantWorkThrottle">
+            <summary>
+            Throttles work until the previous work's task has completed.
+            When new work is provided before the previous work's task has completed, any existing throttled work is discarded and cancelled.
+            </summary>
+        </member>
+        <member name="F:TwistedOak.Threading.DiscardRedundantWorkThrottle._queuedJob">
+            <summary>Holds the interlocked running/qeued state.</summary>
+            <remarks>
+            if null: not running and nothing queued
+            elif RunningButNothingQueuedJob: running something but nothing queued
+            elif X -> running something and X queued
+            </remarks>
+        </member>
+        <member name="M:TwistedOak.Threading.DiscardRedundantWorkThrottle.#ctor(System.Threading.SynchronizationContext)">
+            <summary>Constructs a throttle that runs work on the given context.</summary>
+            <param name="runContext">
+            The synchronization context that work is run on.
+            Defaults to the thread pool when null.
+            </param>
+        </member>
+        <member name="M:TwistedOak.Threading.DiscardRedundantWorkThrottle.SetNextToAsyncFunction(System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Sets the next (asynchronous) work to be run, either now or when the currently running action has finished, to be the given function.
+            The work will not be considered completed until the resulting task has completed.
+            </summary>
+            <returns>A task for the work's eventual result, failure, or cancelation (if it is replaced before it can run).</returns>
+        </member>
+        <member name="M:TwistedOak.Threading.DiscardRedundantWorkThrottle.SetNextToAsyncFunction``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <summary>
+            Sets the next (asynchronous) work to be run, either now or when the currently running action has finished, to be the given function.
+            The work will not be considered completed until the resulting task has completed.
+            </summary>
+            <returns>A task for the work's eventual result, failure, or cancelation (if it is replaced before it can run).</returns>
+        </member>
+        <member name="M:TwistedOak.Threading.DiscardRedundantWorkThrottle.SetNextToAction(System.Action)">
+            <summary>Sets the next work to be run, either now or when the currently running action has finished, to be the given action.</summary>
+            <returns>A task for the work's eventual success, failure, or cancelation (if it is replaced before it can run).</returns>
+        </member>
+        <member name="M:TwistedOak.Threading.DiscardRedundantWorkThrottle.SetNextToFunction``1(System.Func{``0})">
+            <summary>Sets the next work to be run, either now or when the currently running action has finished, to be the given function.</summary>
+            <returns>A task for the work's eventual result, failure, or cancelation (if it is replaced before it can run).</returns>
+        </member>
+        <member name="T:TwistedOak.Threading.Tasks">
+            <summary>Contains factory methods and properties for tasks.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.RanToCompletion">
+            <summary>A task that ran to completion.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.RanToCompletion``1(``0)">
+            <summary>A task that ran to completion with the given result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.Cancelled">
+            <summary>A cancelled task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.Cancelled``1">
+            <summary>A generic cancelled task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.Faulted(System.Exception)">
+            <summary>A task that faulted with the given exception.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.Faulted(System.Collections.Generic.IEnumerable{System.Exception})">
+            <summary>A task that faulted with the given exceptions.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.Faulted``1(System.Exception)">
+            <summary>A generic task that faulted with the given exception.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.Faulted``1(System.Collections.Generic.IEnumerable{System.Exception})">
+            <summary>A generic task that faulted with the given exceptions.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.FromEvaluation``1(System.Func{``0})">
+            <summary>Synchronously evaluates a function, returning a Task based on its result or failure.</summary>
+            <remarks>The 'async' modifier packages thrown exceptions into the resulting task, despite no awaits.</remarks>
+        </member>
+        <member name="M:TwistedOak.Threading.Tasks.FromExecution(System.Action)">
+            <summary>Synchronously executes an action, returning a Task based on its success or failure.</summary>
+            <remarks>The 'async' modifier packages thrown exceptions into the resulting task, despite no awaits.</remarks>
+        </member>
+        <member name="T:TwistedOak.Threading.TaskCompletionSourceExtensions">
+            <summary>Contains extension methods for manipulating task completion sources.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.SetFromCompletedTask(TwistedOak.Threading.TaskCompletionSource,System.Threading.Tasks.Task)">
+            <summary>Transitions the task source into the same state as the given completed task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.SetFromCompletedTask``1(System.Threading.Tasks.TaskCompletionSource{``0},System.Threading.Tasks.Task{``0})">
+            <summary>Transitions the task source into the same state as the given completed task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.TrySetFromCompletedTask(TwistedOak.Threading.TaskCompletionSource,System.Threading.Tasks.Task)">
+            <summary>Attempts to transition the task source into the same state as the given completed task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.TrySetFromCompletedTask``1(System.Threading.Tasks.TaskCompletionSource{``0},System.Threading.Tasks.Task{``0})">
+            <summary>Attempts to transition the task source into the same state as the given completed task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.EventuallySetFromTask(TwistedOak.Threading.TaskCompletionSource,System.Threading.Tasks.Task)">
+            <summary>Transitions the task source into the same state as the given task, once the task eventually completes.</summary>
+            <returns>A task containing the eventual result (or exception) of the transition.</returns>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.EventuallySetFromTask``1(System.Threading.Tasks.TaskCompletionSource{``0},System.Threading.Tasks.Task{``0})">
+            <summary>Transitions the task source into the same state as the given task, once the task eventually completes.</summary>
+            <returns>A task containing the eventual result (or exception) of the transition.</returns>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.EventuallyTrySetFromTask(TwistedOak.Threading.TaskCompletionSource,System.Threading.Tasks.Task)">
+            <summary>Attempts to transition the task source into the same state as the given task, once the task eventually completes.</summary>
+            <returns>A task containing the eventual result of the attempted transition.</returns>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSourceExtensions.EventuallyTrySetFromTask``1(System.Threading.Tasks.TaskCompletionSource{``0},System.Threading.Tasks.Task{``0})">
+            <summary>Attempts to transition the task source into the same state as the given task, once the task eventually completes.</summary>
+            <returns>A task containing the eventual result of the attempted transition.</returns>
+        </member>
+        <member name="T:TwistedOak.Threading.ExclusiveSynchronizationContext">
+            <summary>Runs posted methods in order, without overlap, on some underlying synchronization context.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.ExclusiveSynchronizationContext.#ctor(System.Threading.SynchronizationContext)">
+            <summary>Creates a new exclusive synchronization context, which runs callbacks on either an optional non-null context or else the thread pool.</summary>
+            <param name="subContext">The synchronization context that actions will be run on. Defaults to the thread pool when null.</param>
+        </member>
+        <member name="M:TwistedOak.Threading.ExclusiveSynchronizationContext.Post(System.Threading.SendOrPostCallback,System.Object)">
+            <summary>Dispatches an asynchronous message to the exclusive synchronization context.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.ExclusiveSynchronizationContext.Send(System.Threading.SendOrPostCallback,System.Object)">
+            <summary>Not supported.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.ExclusiveSynchronizationContext.CreateCopy">
+            <summary>Returns the exclusive synchronization context, unchanged.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.OnetimeLock">
+            <summary>A thread-safe lock that can be acquired once but never released.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.OnetimeLock.TryAcquire">
+            <summary>Returns true exactly once, for the first caller. Thread safe.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.OnetimeLock.IsAcquired">
+            <summary>
+            Determines if the lock has been acquired.
+            Volatile result if the lock has not been acquired.
+            </summary>
+        </member>
+        <member name="T:TwistedOak.Threading.SynchronizationContextExtensions">
+            <summary>Contains extension methods for working with synchronization contexts.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.SynchronizationContextExtensions.PostAction(System.Threading.SynchronizationContext,System.Action)">
+            <summary>Posts an action to the synchronization context, exposing its eventual completion as a task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.SynchronizationContextExtensions.PostFunc``1(System.Threading.SynchronizationContext,System.Func{``0})">
+            <summary>Posts a function to the synchronization context, exposing its eventual result as a task.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.SynchronizationContextExtensions.AwaitableEntrance(System.Threading.SynchronizationContext,System.Boolean)">
+            <summary>An awaitable object that, when awaited, resumes execution within the given synchronization context.</summary>        
+            <param name="context">The synchronization context to enter.</param>
+            <param name="forceReentry">Determines if awaiting the current synchronization context results in re-posting to the context or continuing synchronously.</param>
+        </member>
+        <member name="M:TwistedOak.Threading.SynchronizationContextExtensions.GetAwaiter(System.Threading.SynchronizationContext)">
+            <summary>
+            An awaiter that resumes execution by posting to the given synchronization context.
+            If execution is already in the given context, it will re-enter it anyways.
+            </summary>
+            <remarks>Makes synchronization contexts awaitable.</remarks>
+        </member>
+        <member name="T:TwistedOak.Threading.TaskCompletionSource">
+            <summary>The producer side of a System.Threading.Tasks.Task unbound to a delegate, providing access to the consumer side through a Task property.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.SetException(System.Exception)">
+            <summary>Transitions the underlying task into the faulted state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.SetException(System.Collections.Generic.IEnumerable{System.Exception})">
+            <summary>Transitions the underlying task into the faulted state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.SetCanceled">
+            <summary>Transitions the underlying task into the canceled state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.SetRanToCompletion">
+            <summary>Transitions the underlying task into the ran-to-completion state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.TrySetException(System.Exception)">
+            <summary>Attempts to transtion the underlying task into the faulted state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.TrySetException(System.Collections.Generic.IEnumerable{System.Exception})">
+            <summary>Attempts to transtion the underlying task into the faulted state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.TrySetCanceled">
+            <summary>Attempts to transtion the underlying task into the canceled state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.TrySetRanToCompletion">
+            <summary>Attempts to transtion the underlying task into the ran-to-completion state.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskCompletionSource.ToString">
+            <summary>Returns a string that represents the task completion source.</summary>
+        </member>
+        <member name="P:TwistedOak.Threading.TaskCompletionSource.Task">
+            <summary>Gets the task created and controlled by this task completion source.</summary>
+        </member>
+        <member name="T:TwistedOak.Threading.TaskExtensions">
+            <summary>Contains extension methods related to tasks.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.IsRanToCompletion(System.Threading.Tasks.Task)">
+            <summary>Determines if the task has ran to completion, as opposed to being faulted, cancelled, or not yet completed.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.ObserveAnyException(System.Threading.Tasks.Task)">
+            <summary>Will observe (but ignore) the task's exception, if any, so that it is not considered propagated to the unobserved exception handler.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.AnyTypeOfCompletion``1(System.Threading.Tasks.Task{``0})">
+            <summary>A task that runs to completion (with the given task as the result) when the given task either runs to completion, faults, or cancels.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.AnyTypeOfCompletion(System.Threading.Tasks.Task)">
+            <summary>A task that runs to completion (with the given task as the result) when the given task either runs to completion, faults, or cancels.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WithCanceledExceptionToCancellation(System.Threading.Tasks.Task)">
+            <summary>A task that is cancelled if the given task contains an OperationCanceledException, or else contains the same eventual result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WithCanceledExceptionToCancellation``1(System.Threading.Tasks.Task{``0})">
+            <summary>A task that is cancelled if the given task contains an OperationCanceledException, or else contains the same eventual result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WithCancellationToTaskCanceledException(System.Threading.Tasks.Task)">
+            <summary>A task that faults if the given task is cancelled, or else contains the same eventual result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WithCancellationToTaskCanceledException``1(System.Threading.Tasks.Task{``0})">
+            <summary>A task that faults if the given task is cancelled, or else contains the same eventual result.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.Select``1(System.Threading.Tasks.Task,System.Func{``0})">
+            <summary>
+            The eventual result of evaluating a function after a task runs to completion.
+            The projection is guaranteed to be evaluated in the same synchronization context as the caller.
+            Cancellation and exceptions are propagated.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.Select``2(System.Threading.Tasks.Task{``0},System.Func{``0,``1})">
+            <summary>
+            The eventual result of applying a projection to the task's result.
+            The projection is guaranteed to be evaluated in the same synchronization context as the caller.
+            Cancellation and exceptions are propagated, without evaluating the projection.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.SelectMany``3(System.Threading.Tasks.Task{``0},System.Func{``0,System.Threading.Tasks.Task{``1}},System.Func{``0,``1,``2})">
+            <summary>
+            The eventual result of applying a series of projections to a task's result.
+            The projections are guaranteed to be evaluated in the same synchronization context as the caller.
+            Cancellation and exceptions are propagated, without evaluating more projections.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.Where(System.Threading.Tasks.Task,System.Func{System.Boolean})">
+            <summary>
+            The same task, except cancelled if it would have succeeded with a value that didn't match the filter.
+            The filter is guaranteed to be evaluated in the same synchronization context as the caller.
+            Cancellation and exceptions are propagated, without evaluating the filter.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.Where``1(System.Threading.Tasks.Task{``0},System.Func{``0,System.Boolean})">
+            <summary>
+            The same task, except cancelled if it would have succeeded with a value that didn't match the filter.
+            The filter is guaranteed to be evaluated in the same synchronization context as the caller.
+            Cancellation and exceptions are propagated, without evaluating the filter.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.HandleCancelled(System.Threading.Tasks.Task,System.Action)">
+            <summary>
+            Replaces a task's eventual cancellation with the result of evaluating a function.
+            If the task runs to completion or faults, then the result is propagated without evaluating the function.
+            The function is guaranteed to be evaluated in the same synchronization context as the caller.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.SelectCancelled``1(System.Threading.Tasks.Task{``0},System.Func{``0})">
+            <summary>
+            Replaces a task's eventual cancellation with the result of evaluating a function.
+            If the task runs to completion or faults, then the result is propagated without evaluating the function.
+            The function is guaranteed to be evaluated in the same synchronization context as the caller.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.HandleFaulted``1(System.Threading.Tasks.Task,System.Action{``0})">
+            <summary>
+            Replaces a task's eventual failure of a given type with the result of evaluating a function.
+            Otherwise the result of the task is propagated without evaluating the function.
+            The function is guaranteed to be evaluated in the same synchronization context as the caller.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.SelectFaulted``2(System.Threading.Tasks.Task{``0},System.Func{``1,``0})">
+            <summary>
+            Replaces a task's eventual failure of a given type with the result of evaluating a function.
+            Otherwise the result of the task is propagated without evaluating the function.
+            The function is guaranteed to be evaluated in the same synchronization context as the caller.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WhenAll``1(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task{``0}})">
+            <summary>A task that will complete when all of the supplied tasks have completed.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WhenAll(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
+            <summary>A task that will complete when all of the supplied tasks have completed.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WhenAny``1(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task{``0}})">
+            <summary>A task that will complete when any of the supplied tasks have completed.</summary>
+        </member>
+        <member name="M:TwistedOak.Threading.TaskExtensions.WhenAny(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task})">
+            <summary>A task that will complete when any of the supplied tasks have completed.</summary>
+        </member>
+    </members>
+</doc>

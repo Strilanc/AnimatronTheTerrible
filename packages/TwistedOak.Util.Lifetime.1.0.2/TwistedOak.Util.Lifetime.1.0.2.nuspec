@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>TwistedOak.Util.Lifetime</id>
+    <version>1.0.2</version>
+    <title>Lifetime (improved CancellationToken)</title>
+    <authors>Craig Gidney</authors>
+    <owners>Craig Gidney</owners>
+    <licenseUrl>https://github.com/TwistedOakStudios/Lifetime/blob/master/License.txt</licenseUrl>
+    <projectUrl>https://github.com/TwistedOakStudios/Lifetime</projectUrl>
+    <iconUrl>http://i.imgur.com/BvHia.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A small library that implements an improved version of System.Threading.CancellationToken with support for removable registrations, to allow for garbage collection in the presence of long-lived tokens, plus some related utilities.
+
+Motivation: cancellation tokens can be the source of memory "leaks", because an unbounded number of completed operations may have registered now-pointless callbacks on a token that can't be released or cancelled. The callbacks may reference all kinds of data, preventing effective garbage collection. Using a Lifetime allows fixing these issues because callback registrations can be given lifetimes of their own.
+
+Additional utilities: LifetimeSource, LifetimeExchanger, DisposableLifetime, Max, Min, CreateDependentSource.</description>
+    <summary>Implements an improved version of CancellationToken with support for removable registrations, to allow for garbage collection in the presence of long-lived tokens, plus some related utilities.</summary>
+    <releaseNotes>Added missing implicit conversion from CancellationToken to Lifetime. Minor documentation changes.</releaseNotes>
+    <copyright>Twisted Oak Studios, 2012</copyright>
+    <language>en-US</language>
+    <tags>lifetime cancellation token</tags>
+    <references>
+      <reference file="Lifetime.dll" />
+    </references>
+  </metadata>
+</package>

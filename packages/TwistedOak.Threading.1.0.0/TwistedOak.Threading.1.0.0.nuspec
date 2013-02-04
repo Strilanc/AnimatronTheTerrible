@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>TwistedOak.Threading</id>
+    <version>1.0.0</version>
+    <title>Twisted Oak Threading Utilities</title>
+    <authors>Craig Gidney</authors>
+    <owners>Craig Gidney</owners>
+    <licenseUrl>https://github.com/TwistedOakStudios/Twisted-Oak-Threading-Utilities/blob/master/License.txt</licenseUrl>
+    <projectUrl>https://github.com/TwistedOakStudios/Twisted-Oak-Threading-Utilities</projectUrl>
+    <iconUrl>http://i.imgur.com/mg8Hdv4.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A variety of utility classes and methods related to tasks, synchronization contexts, asynchrony, exclusion, and awaiting.
+
+Makes tasks queryable and synchronization contexts awaitable. Includes anonymous awaitable types, a void task completion source, a simple one time lock, etc. See the project url for more details.</description>
+    <summary>A variety of utility classes and methods related to tasks, synchronization contexts, asynchrony, exclusion, and awaiting.</summary>
+    <copyright>Craig Gidney, 2012</copyright>
+    <language>en-US</language>
+    <tags>threading task await async</tags>
+    <references>
+      <reference file="TwistedOakThreading.dll" />
+    </references>
+  </metadata>
+</package>

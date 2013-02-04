@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>Strilanc.Angle</id>
+    <version>1.0.3</version>
+    <title>Simple Angle Library</title>
+    <authors>Craig Gidney</authors>
+    <owners>Craig Gidney</owners>
+    <projectUrl>https://github.com/Strilanc/Angle</projectUrl>
+    <iconUrl>http://i.imgur.com/yYDOt.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A simple library for working with directions and rotations in 2d. Provides types for representing facing (Dir), turning (Turn), conversion (Basis) and clamping (Range).</description>
+    <summary>A simple library for working with directions and rotations in 2d.</summary>
+    <releaseNotes>No code changes, just better meta data.</releaseNotes>
+    <language>en-US</language>
+    <tags>angle</tags>
+    <references>
+      <reference file="Angle.dll" />
+    </references>
+  </metadata>
+</package>

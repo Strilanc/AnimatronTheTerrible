@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>TwistedOak.Collections.PerishableCollection</id>
+    <version>1.0.1</version>
+    <title>Perishable Collection</title>
+    <authors>Craig Gidney</authors>
+    <owners>Craig Gidney</owners>
+    <licenseUrl>https://github.com/TwistedOakStudios/PerishableCollection/blob/master/License.txt</licenseUrl>
+    <projectUrl>https://github.com/TwistedOakStudios/PerishableCollection</projectUrl>
+    <iconUrl>http://i.imgur.com/WP3EF.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>An observable collection where items are paired with a lifetime, so that users and transformed views of the collection don't have to worry about pairing future removals with past additions.</description>
+    <releaseNotes>Fixed a potential race condition. (Re-ordering may have placed half-constructed items without a valid Next pointer or Value into the list. Caught by analysis; was unable to trigger in tests.)</releaseNotes>
+    <copyright>Twisted Oak Studios, 2012</copyright>
+    <language>en-US</language>
+    <tags>lifetime cancellation token collection perishable</tags>
+    <dependencies>
+      <group targetFramework=".NETPortable0.0-net45+win80">
+        <dependency id="Rx-Linq" version="2.0.21114" />
+        <dependency id="TwistedOak.Util.Lifetime" version="1.0.1" />
+      </group>
+    </dependencies>
+    <references>
+      <reference file="PerishableCollection.dll" />
+    </references>
+  </metadata>
+</package>

@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Lifetime</name>
+    </assembly>
+    <members>
+        <member name="T:TwistedOak.Util.Soul.AnonymousSoul">
+            <summary>A soul implemented by delegates passed to its constructor.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.ISoul">
+            <summary>The internal representation of a lifetime.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.ISoul.Register(System.Action)">
+            <summary>
+            Adds a callback to be run when the soul is not mortal.
+            Returns a delegate that, if run before the soul is non-mortal, cancels the registration.
+            </summary>
+        </member>
+        <member name="P:TwistedOak.Util.Soul.ISoul.Phase">
+            <summary>The soul's state, either transiently mortal or permanently dead/immortal.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.CollapsingSoul">
+            <summary>Delegates to an underlying soul that is replaced with one of the permanent souls once it is no longer mortal.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.DeadSoul">
+            <summary>A permanently dead soul.</summary>
+        </member>
+        <member name="F:TwistedOak.Util.Soul.DeadSoul.Instance">
+            <summary>The single instance of the permanently dead soul.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.ImmortalSoul">
+            <summary>A permanently immortal soul.</summary>
+        </member>
+        <member name="F:TwistedOak.Util.Soul.ImmortalSoul.Instance">
+            <summary>The single instance of the permanently dead soul.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.DoublyLinkedNode`1">
+            <summary>A doubly-linked list node for a circular linked list.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.DoublyLinkedNode`1.CreateEmptyCycle">
+            <summary>Creates a node doubly linked to itself.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.DoublyLinkedNode`1.Prepend(`0)">
+            <summary>Creates a new node containing the given item, inserted preceeding this node.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.DoublyLinkedNode`1.Unlink">
+            <summary>Removes the node from any list it is in, linking it to itself instead.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.DoublyLinkedNode`1.EnumerateOthers">
+            <summary>Enumerates all the nodes, except this one, that are in the same circular linked list.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.LifetimeSource">
+            <summary>
+            Controls the fate of an exposed lifetime.
+            The exposed lifetime dies or becomes immortal when the EndLifetime or ImmortalizeLifetime methods are called, respectively.
+            When a source is garbage collected without killing or immortalizing its exposed lifetime, the exposed lifetime becomes immortal.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeSource.#ctor">
+            <summary>Creates a new lifetime source managing a new initially mortal lifetime.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeSource.EndLifetime">
+            <summary>
+            Permanently transitions the source's exposed lifetime from mortal to dead.
+            No effect when the exposed lifetime is already dead.
+            Invalid operation when the exposed lifetime is immortal.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeSource.ImmortalizeLifetime">
+            <summary>
+            Permanently transitions the source's exposed lifetime from mortal to immortal.
+            No effect when the exposed lifetime is already immortal.
+            Invalid operation when the exposed lifetime is dead.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeSource.Finalize">
+            <summary>Permanently transitions the source's exposed lifetime from mortal to immortal.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeSource.ToString">
+            <summary>Returns a text representation of the lifetime source's current state.</summary>
+        </member>
+        <member name="P:TwistedOak.Util.LifetimeSource.Lifetime">
+            <summary>The lifetime exposed and managed by the lifetime source.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.DisposableLifetime">
+            <summary>
+            Exposes a lifetime that permanently transitions from mortal to dead when the managing DisposableLifetime instance is disposed.
+            When a DisposableLifetime is garbage collected without being disposed, the exposed lifetime becomes immortal.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.DisposableLifetime.Dispose">
+            <summary>Transitions the exposed lifetime from mortal to dead.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.DisposableLifetime.ToString">
+            <summary>Returns a text representation of the disposable lifetime's current state.</summary>
+        </member>
+        <member name="P:TwistedOak.Util.DisposableLifetime.Lifetime">
+            <summary>The lifetime that transitions from mortal to dead when the managing DisposableLifetime is disposed.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.LifetimeExchanger">
+            <summary>Creates lifetimes when requested, setting them when the next lifetime is requested.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeExchanger.StartNextAndEndPreviousLifetime">
+            <summary>Returns a newly created mortal lifetime after killing the previously created lifetime (if any).</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeExchanger.StartNextAndImmortalizePreviousLifetime">
+            <summary>Returns a newly created mortal lifetime after giving eternal life to the previously created lifetime (if any).</summary>
+        </member>
+        <member name="P:TwistedOak.Util.LifetimeExchanger.ActiveLifetime">
+            <summary>Returns the current lifetime, that will be killed or immortalized before the next lifetime is created by the exchanger.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Lifetime">
+            <summary>
+            Runs callbacks when transitioning permanently from mortal to either dead or immortal.
+            The default lifetime is immortal.
+            Lifetimes whose source is garbage collected are immortal.
+            </summary>
+        </member>
+        <member name="F:TwistedOak.Util.Lifetime.Immortal">
+            <summary>
+            The default lifetime.
+            A lifetime that has already permanently transitioned from mortal to immortal.
+            </summary>
+        </member>
+        <member name="F:TwistedOak.Util.Lifetime.Dead">
+            <summary>
+            NOT the default lifetime.
+            A lifetime that has already permanently transitioned from mortal to dead.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.WhenDead(System.Action,TwistedOak.Util.Lifetime)">
+            <summary>
+            Registers an action to perform when this lifetime is dead.
+            If a registration lifetime is given and becomes dead before this lifetime becomes dead, the registration is cancelled.
+            If the lifetime is already dead, the callback is run synchronously.
+            </summary>
+            <param name="action">
+            The callback to be run when the lifetime is dead.
+            </param>
+            <param name="registrationLifetime">
+            Determines when/if the WhenDead callback registration is cancelled, meaning the callback will not be run.
+            The registration is cancelled when the registration lifetime dies.
+            Defaults to an immortal lifetime.
+            </param>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.IsCongruentTo(TwistedOak.Util.Lifetime)">
+            <summary>
+            Determines if two lifetimes are guaranteed to be in the same phase from now on.
+            Mortal lifetimes are only congruent if they have the same source.
+            All immortal lifetimes are congruent.
+            All dead lifetimes are congruent.
+            Two initially non-congruent lifetimes can become congruent by ending up in the same non-mortal state.
+            </summary>
+            <param name="other">The lifetime that this lifetime is being compared to.</param>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.op_Implicit(TwistedOak.Util.Lifetime)~System.Threading.CancellationToken">
+            <summary>Returns a cancellation token that is cancelled when the lifetime ends.</summary>
+             <remarks>
+             Technically this should be an explicit conversion, because cancellation tokens curently don't handle 'becoming immotal'.
+             A lifetime converted to a token and back will be stuck mortal if the original becomes immortal, instead of properly tracking it.
+             However, this often only affects garbage collection instead of visible behavior... it's a trade-off.
+             </remarks>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.op_Implicit(System.Threading.CancellationToken)~TwistedOak.Util.Lifetime">
+            <summary>Returns a lifetime that ends when the CancellationToken is cancelled.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.Equals(TwistedOak.Util.Lifetime)">
+            <summary>Determines if the other lifetime has the same source.</summary>
+             <param name="other">The lifetime that this lifetime is being compared to.</param>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.GetHashCode">
+            <summary>Returns the hash code for this lifetime, based on its source.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.Equals(System.Object)">
+            <summary>Determines if the other object is a lifetime with the same source.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Lifetime.ToString">
+            <summary>Returns a text representation of the lifetime's current state.</summary>
+        </member>
+        <member name="P:TwistedOak.Util.Lifetime.IsMortal">
+            <summary>Determines if this lifetime is still transiently mortal.</summary>
+        </member>
+        <member name="P:TwistedOak.Util.Lifetime.IsImmortal">
+            <summary>Determines if this lifetime is permanently immortal.</summary>
+        </member>
+        <member name="P:TwistedOak.Util.Lifetime.IsDead">
+            <summary>Determines if this lifetime is permanently dead.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.LifetimeUtilities">
+            <summary>Utility classes for manipulating lifetimes.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeUtilities.Min(TwistedOak.Util.Lifetime,TwistedOak.Util.Lifetime)">
+            <summary>Returns a lifetime that dies when either of the given lifetimes dies or becomes immortal when both of the given lifetimes become immortal.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeUtilities.Max(TwistedOak.Util.Lifetime,TwistedOak.Util.Lifetime)">
+            <summary>Returns a lifetime that becomes immortal when either of the given lifetimes becomes immortal or dies when both of the given lifetimes die.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.LifetimeUtilities.CreateDependentSource(TwistedOak.Util.Lifetime)">
+            <summary>
+            Returns a new lifetime source that automatically kills its exposed lifetime if the given lifetime dies.
+            Note: If the given lifetimes has died or will die then using ImmortalizeLifetime on the result will eventually cause an InvalidOperationException.
+            </summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.Phase">
+            <summary>A state of life.</summary>
+        </member>
+        <member name="F:TwistedOak.Util.Soul.Phase.Mortal">
+            <summary>The transient living state preceeding either death or immortality.</summary>
+        </member>
+        <member name="F:TwistedOak.Util.Soul.Phase.Dead">
+            <summary>The permanent non-living state.</summary>
+        </member>
+        <member name="F:TwistedOak.Util.Soul.Phase.Immortal">
+            <summary>The permanent living state.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.MortalSoul">
+            <summary>An initially mortal soul that can be manually killed or immortalized.</summary>
+        </member>
+        <member name="F:TwistedOak.Util.Soul.MortalSoul._callbacks">
+            <summary>Callbacks to run when the lifetime is killed or immortalized.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.MortalSoul.TransitionPermanently(TwistedOak.Util.Soul.Phase)">
+            <summary>
+            Permanently transitions this lifetime to be either dead or immortal.
+            No effect if already transitioned to the desired state.
+            Invalid operation if already transitioned to another state.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.MortalSoul.Register(System.Action)">
+            <summary>
+            Registers the given action to perform when this lifetime is either immortal or dead.
+            The returned action will remove the registration (of the given action) if invoked before this lifetime becomes immortal or dead.
+            Runs the given action synchronously if this lifetime is already immortal or dead.
+            </summary>
+        </member>
+        <member name="P:TwistedOak.Util.Soul.MortalSoul.Phase">
+            <summary>The current state of the lifetime.</summary>
+        </member>
+        <member name="T:TwistedOak.Util.Soul.Soul">
+            <summary>Utility methods for working with souls</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.Soul.AsPermanentSoul(TwistedOak.Util.Soul.Phase)">
+            <summary>
+            Returns a soul permanently stuck in the given phase.
+            A permanently mortal soul is considered to be immortal.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.Soul.AsPermanentLifetime(TwistedOak.Util.Soul.Phase)">
+            <summary>
+            Returns a lifetime permanently stuck in the given phase.
+            A permanently mortal soul is considered to be immortal.
+            </summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.Soul.AsCollapsingLifetime(TwistedOak.Util.Soul.ISoul)">
+            <summary>Returns a lifetime for the given soul, collapsing it to a simpler soul when possible.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.Soul.InterdependentRegister(TwistedOak.Util.Soul.ISoul,System.Func{System.Boolean},TwistedOak.Util.Soul.ISoul,System.Func{System.Boolean})">
+            <summary>Registers callbacks to each soul, ensuring everything is cleaned up properly upon completion.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.Soul.DependentRegister(TwistedOak.Util.Soul.ISoul,System.Action,TwistedOak.Util.Soul.ISoul)">
+            <summary>Registers a callback to the dependent soul that only occurs if the necessary soul doesn't die first, ensuring everything is cleaned up properly.</summary>
+        </member>
+        <member name="M:TwistedOak.Util.Soul.Soul.Combine(TwistedOak.Util.Soul.ISoul,TwistedOak.Util.Soul.ISoul,System.Func{TwistedOak.Util.Soul.Phase,TwistedOak.Util.Soul.Phase,TwistedOak.Util.Soul.Phase})">
+            <summary>Combines two souls by using a custom function to combine their phases.</summary>
+        </member>
+    </members>
+</doc>

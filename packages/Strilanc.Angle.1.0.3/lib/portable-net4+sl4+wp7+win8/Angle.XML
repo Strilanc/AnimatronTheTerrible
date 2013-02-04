@@ -1,0 +1,388 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Angle</name>
+    </assembly>
+    <members>
+        <member name="M:Strilanc.Angle.InternalUtil.ProperMod(System.Double,System.Double)">
+            <summary>Returns the smallest non-negative remainder that results from dividing the given value by the given divisor.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.InternalUtil.DifMod(System.Double,System.Double)">
+            <summary>Returns the smallest absolute (positive or negative) remainder that results from dividing the given value by the given divisor.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.FromStartToFinish(Strilanc.Angle.Dir,Strilanc.Angle.Dir,System.Boolean)">
+            <summary>
+            Returns a range corresponding to the directions that are covered by starting from a given start direction then rotating until a given finish direction is reached.
+            The direction of rotation (clockwise vs counter-clockwise) is determined by the moveClockwise parameter.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.FromCenterAndMaxDeviation(Strilanc.Angle.Dir,Strilanc.Angle.Turn)">
+            <summary>Returns a range corresponding to the directions that can be reached by starting from the given center direction and turning up to the given maximum (in either direction).</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.FromStartToFinishIncreasingInBasis(Strilanc.Angle.Dir,Strilanc.Angle.Dir,Strilanc.Angle.Basis)">
+            <summary>
+            Returns a range corresponding to the directions that are covered by starting from a given start direction then rotating until a given finish direction is reached.
+            The direction of rotation (clockwise vs counter-clockwise) is the positive direction in the given basis.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.FromStartToFinishDecreasingInBasis(Strilanc.Angle.Dir,Strilanc.Angle.Dir,Strilanc.Angle.Basis)">
+            <summary>
+            Returns a range corresponding to the directions that are covered by starting from a given start direction then rotating until a given finish direction is reached.
+            The direction of rotation (clockwise vs counter-clockwise) is the negative direction in the given basis.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.FromStartToFinishIncreasingInBasis(System.Double,System.Double,Strilanc.Angle.Basis)">
+            <summary>
+            Returns a range corresponding to the directions that are covered by starting from a given start angle then rotating until a given finish angle is reached.
+            The direction of rotation (clockwise vs counter-clockwise) is the positive direction in the given basis.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.FromStartToFinishDecreasingInBasis(System.Double,System.Double,Strilanc.Angle.Basis)">
+            <summary>
+            Returns a range corresponding to the directions that are covered by starting from a given start angle then rotating until a given finish angle is reached.
+            The direction of rotation (clockwise vs counter-clockwise) is the negative direction in the given basis.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.Inverse">
+            <summary>Returns the inverse range, which includes directions not in this range and excludes directions in this range (except the end points are shared).</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.Contains(Strilanc.Angle.Dir)">
+            <summary>Determines if a given direction is in this range.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.Side(System.Boolean)">
+            <summary>Returns the clockwise or counter-clockwise side of this range, depending on the given parameter.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.Clamp(Strilanc.Angle.Dir)">
+            <summary>Forces the given direction to be inside this range, rotating it by as little as possible.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.op_Addition(Strilanc.Angle.Range,Strilanc.Angle.Turn)">
+            <summary>Rotates the given range by the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.op_Subtraction(Strilanc.Angle.Range,Strilanc.Angle.Turn)">
+            <summary>Rotates the given range by the opposite of the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.op_Equality(Strilanc.Angle.Range,Strilanc.Angle.Range)">
+            <summary>Determines if two ranges are equivalent. Note that two 'all directions' ranges are only equal if they have the same center.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.op_Inequality(Strilanc.Angle.Range,Strilanc.Angle.Range)">
+            <summary>Determines if two ranges are not equivalent. Note that two 'all directions' ranges are only equal if they have the same center.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.Equals(Strilanc.Angle.Range)">
+            <summary>Determines if two ranges are equivalent. Note that two 'all directions' ranges are only equal if they have the same center.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Range.Equals(Strilanc.Angle.Range,Strilanc.Angle.Turn)">
+            <summary>Determines if two ranges are equivalent, within some tolerance. Note that two 'all directions' ranges are only equal if they have the same center.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Range.Span">
+            <summary>The amount of rotation necessary to turn from the clockwise side to the counter-clockwise side.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Range.CounterClockwiseSide">
+            <summary>The counter-clockwise side of the range (inclusive). Values that are further counter-clockwise are not in the range (unless the range covers all directions).</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Range.ClockwiseSide">
+            <summary>The clockwise side of the range (inclusive). Values that are further clockwise are not in the range (unless the range covers all directions).</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Range.Center">
+            <summary>The center of the range, where equal amounts of absolute rotation are needed to reach either side.</summary>
+        </member>
+        <member name="T:Strilanc.Angle.Basis">
+            <summary>
+            A system of angles, determining the size and clockwise-ness of the angular units and the direction of the zero angle.
+            Used for translating raw angle values to and from invariant directions (Dir) and rotations (Turn).
+            </summary>
+        </member>
+        <member name="F:Strilanc.Angle.Basis.RadiansPerRotation">
+            <summary>The number of radians in a full rotation (2*pi).</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Basis.DegreesPerRotation">
+            <summary>The number of degrees in a full rotation (360).</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Basis.GradiansPerRotation">
+            <summary>The number of gradians in a full rotation (400).</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Basis.Natural">
+            <summary>
+            Natural angular units.
+            The origin is along the positive X axis.
+            The unit is counter-clockwise radians.
+            For example, angle 0 is along the vector (x:1,y:0) and angle pi/2 is along the vector (x:0, y:1).
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Basis.FromDirectionAndUnits(Strilanc.Angle.Dir,System.Double,System.Boolean)">
+            <summary>Returns a basis with a zero angle along the given direction, and units that satisfy the given constraints.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Basis.AngleToDir(System.Double)">
+            <summary>Returns the direction corresponding to the given angle in this basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Basis.AngleToTurn(System.Double)">
+            <summary>Returns the turn corresponding to a rotation by the given angle in this basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Basis.DirToUnsignedAngle(Strilanc.Angle.Dir)">
+            <summary>Returns the smallest non-negative angle corresponding to the given direction in this basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Basis.DirToSignedAngle(Strilanc.Angle.Dir)">
+            <summary>Returns the smallest positive or negative angle corresponding to the given direction in this basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Basis.TurnToAngle(Strilanc.Angle.Turn)">
+            <summary>Returns the angle corresponding to a rotation by the given turn in this basis.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Basis.Origin">
+            <summary>The angle, in the natural basis, where the origin (zero) of this basis is located.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Basis.CounterClockwiseRadiansPerUnit">
+            <summary>The conversion factor that, when multiplied against clockwise-negative radians, results in an angle measured in the angular unit of this basis.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Basis.UnitsPerCounterClockwiseTurn">
+            <summary>The number of units in this basis that make up a counter-clockwise turn.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Basis.IsClockwisePositive">
+            <summary>Determines if increasing an angle corresponds to rotating clockwise or counterclockwise.</summary>
+        </member>
+        <member name="T:Strilanc.Angle.Dir">
+            <summary>
+            A 2-dimensional direction on the XY plane.
+            Isomorphic to a point on the unit circle.
+            The 'point' in the affine space of angles.
+            </summary>
+        </member>
+        <member name="F:Strilanc.Angle.Dir.AlongPositiveX">
+            <summary>Points directly along the X axis, in the increasing direction.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Dir.AlongPositiveY">
+            <summary>Points directly along the Y axis, in the increasing direction.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Dir.AlongNegativeX">
+            <summary>Points directly along the X axis, in the decreasing direction.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Dir.AlongNegativeY">
+            <summary>Points directly along the Y axis, in the decreasing direction.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.FromNaturalAngle(System.Double)">
+            <summary>
+            Returns the direction corresponding to the given angle in the natural basis.
+            Example: The natural angle 0 corresponds to the direction from the origin to point (1, 0).
+            Example: The natural angle pi/2 corresponds to the direction from the origin to point (0, 1).
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.FromVector(System.Double,System.Double)">
+            <summary>Returns the direction along the given displacement.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.FromAngle(System.Double,Strilanc.Angle.Basis)">
+            <summary>Returns the direction corresponding to the given angle in the given basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.GetUnsignedAngle(Strilanc.Angle.Basis)">
+            <summary>Returns the smallest non-negative angle corresponding to this direction in the given basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.GetSignedAngle(Strilanc.Angle.Basis)">
+            <summary>Returns the smallest positive or negative angle corresponding to this direction in the given basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.ClampedInside(Strilanc.Angle.Range)">
+            <summary>Forces this direction to be inside the given range, rotating it by as little as possible.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.op_Addition(Strilanc.Angle.Dir,Strilanc.Angle.Turn)">
+            <summary>Rotates the given direction by the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.op_Subtraction(Strilanc.Angle.Dir,Strilanc.Angle.Turn)">
+            <summary>Rotates the given direction by the opposite of the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.op_Subtraction(Strilanc.Angle.Dir,Strilanc.Angle.Dir)">
+            <summary>Returns the turn necessary to rotate from the second given direction to the first given direction.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.op_Equality(Strilanc.Angle.Dir,Strilanc.Angle.Dir)">
+            <summary>Determines if two directions are equivalent.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.op_Inequality(Strilanc.Angle.Dir,Strilanc.Angle.Dir)">
+            <summary>Determines if two directions are not equivalent.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.Equals(Strilanc.Angle.Dir)">
+            <summary>Determines if two directions are equivalent.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Dir.Equals(Strilanc.Angle.Dir,Strilanc.Angle.Turn)">
+            <summary>Determines if two directions are equivalent, within a tolerance.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Dir.UnitX">
+            <summary>The X component of the unit vector pointing along this direction.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Dir.UnitY">
+            <summary>The Y component of the unit vector pointing along this direction.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Dir.UnsignedNaturalAngle">
+            <summary>
+            Returns the smallest equivalent non-negative angle corresponding to this direction in the natural basis.
+            Example: The direction from the origin to point (1, 0) has a natural angle of 0.
+            Example: The direction from the origin to point (0, 1) has a natural angle of pi/2.
+            Example: The direction from the origin to point (0, -1) has an unsigned natural angle of 3*pi/2.
+            </summary>
+        </member>
+        <member name="P:Strilanc.Angle.Dir.SignedNaturalAngle">
+            <summary>
+            Returns the smallest equivalent negative or positive angle corresponding to this direction in the natural basis.
+            Example: The direction from the origin to point (1, 0) has a natural angle of 0.
+            Example: The direction from the origin to point (0, 1) has a natural angle of pi/2.
+            Example: The direction from the origin to point (0, -1) has a signed natural angle of -pi/2.
+            </summary>
+        </member>
+        <member name="T:Strilanc.Angle.Turn">
+            <summary>
+            An amount to rotate by.
+            The 'delta' in the affine space of angles.
+            </summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.Zero">
+            <summary>The identity rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneTurnCounterClockwise">
+            <summary>1 complete counter clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneRadianCounterClockwise">
+            <summary>1/(2*pi)'th of a counter clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneDegreeCounterClockwise">
+            <summary>1/360'th of a counter clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneGradianCounterClockwise">
+            <summary>1/400'th of a counter clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneTurnClockwise">
+            <summary>1 complete clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneRadianClockwise">
+            <summary>1/(2*pi)'th of a clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneDegreeClockwise">
+            <summary>1/360'th of a clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.OneGradianClockwise">
+            <summary>1/400'th of a clockwise rotation.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.CounterClockwiseComparer">
+            <summary>A comparer that considers turns that are more counter-clockwise to be larger.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.ClockwiseComparer">
+            <summary>A comparer that considers turns that are more clockwise to be larger.</summary>
+        </member>
+        <member name="F:Strilanc.Angle.Turn.AbsoluteRotationComparer">
+            <summary>A comparer that considers turns that involve more rotation, whether clockwise or counter-clockwise, to be larger.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.FromNaturalAngle(System.Double)">
+            <summary>Returns the turn corresponding to a counter-clockwise rotation by the given angle in radians.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.FromAngle(System.Double,Strilanc.Angle.Basis)">
+            <summary>Returns the turn corresponding to a rotation by the given angle in the given basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.GetAngle(Strilanc.Angle.Basis)">
+            <summary>Returns the angle corresponding to a rotation by the given turn, in the units of the given basis.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.MinimumCongruentTurn">
+            <summary>The smallest turn (by magnitude) with an equivalent effect on directions.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.MinimumCongruentCounterClockwiseTurn">
+            <summary>The smallest counter-clockwise turn with an equivalent effect on directions.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.MininmumCongruentClockwiseTurn">
+            <summary>The smallest clockwise turn with an equivalent effect on directions.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.AbsCounterClockwise">
+            <summary>Returns a counter-clockwise rotation with the same magnitude.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.AbsClockwise">
+            <summary>Returns a clockwise rotation with the same magnitude.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.ClampMagnitude(Strilanc.Angle.Turn,System.Boolean)">
+            <summary>Clamps the turn's magnitude to be at most the given magnitude, clockwise or counter-clockwise</summary>
+            <param name="maxMagnitude">The maximum magnitude that the turn is limited to.</param>
+            <param name="useMinimumCongruent">
+            Determines if 'MinimumCongruentTurn' is applied to the input before clamping.
+            For example, the clockwise-ness of the result of clamping a three-quarters clockwise turn to 1 degree is determined by this parameter.
+            The result is counter-clockwise when useMinimumCongruent is true (because the turn becomes a quarter counter-clockwise turn), and clockwise when it is true.
+            </param>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Addition(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>Returns a turn equivalent to applying both given turns.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Subtraction(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>Returns a turn equivalent to adding the first given turn and the inverse of the second given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_UnaryNegation(Strilanc.Angle.Turn)">
+            <summary>Inverts the given turn. Rotating by the result will undo rotating by the input.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Multiply(Strilanc.Angle.Turn,System.Double)">
+            <summary>Scales the given turn by the given factor.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Multiply(System.Double,Strilanc.Angle.Turn)">
+            <summary>Scales the given turn by the given factor.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Division(Strilanc.Angle.Turn,System.Double)">
+            <summary>Divides the given turn by the given factor.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Division(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>Returns the ratio between two turns.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.IsMoreClockwiseThan(Strilanc.Angle.Turn)">
+            <summary>Determines if this turn represents more clockwise (fewer counter-clockwise) rotations than the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.IsMoreCounterClockwiseThan(Strilanc.Angle.Turn)">
+            <summary>Determines if this turn represents more counter-clockwise (fewer clockwise) rotations than the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.IsMoreRotationThan(Strilanc.Angle.Turn)">
+            <summary>Determines if this turn represents more absolute rotation, either clockwise or counter-clockwise, than the given turn.</summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Equality(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>
+            Determines if a turn is equivalent to another.
+            Note that the count of full rotations matters.
+            For example, a full clockwise rotation is not equivalent to no rotation.
+            Use one of the 'SmallestX' methods if you want to remove ambiguities based on rotation count.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.op_Inequality(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>
+            Determines if a turn is not equivalent to another.
+            Note that the count of full rotations matters.
+            For example, a full clockwise rotation is not equivalent to no rotation.
+            Use one of the 'SmallestX' methods if you want to remove ambiguities based on rotation count.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.Equals(Strilanc.Angle.Turn)">
+            <summary>
+            Determines if a turn is equivalent to another.
+            Note that the count of full rotations matters.
+            For example, a full clockwise rotation is not equivalent to no rotation.
+            Use one of the 'SmallestX' methods if you want to remove ambiguities based on rotation count.
+            </summary>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.Equals(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>
+            Determines if a turn is equivalent to another, within a given tolerance.
+            Note that the count of full rotations matters.
+            For example, a full clockwise rotation is not equivalent to no rotation.
+            Use one of the 'SmallestX' methods if you want to remove ambiguities based on rotation count.
+            </summary>
+            <param name="other">The turn to compare against.</param>
+            <param name="tolerance">
+            The maximum difference between the compared turns.
+            Can be clockwise or counter-clockwise (-tolerance has the same effect as +tolerance).
+            </param>
+        </member>
+        <member name="M:Strilanc.Angle.Turn.IsCongruentTo(Strilanc.Angle.Turn,Strilanc.Angle.Turn)">
+            <summary>
+            Determines if the effect of the given turn is equivalent or close to the effect of this turn, within some tolerance.
+            For example, a quarter turn clockwise is congruent to a three-quarters turn counter-clockwise.
+            </summary>
+            <param name="other">The turn to compare against.</param>
+            <param name="tolerance">
+            The maximum difference between the rotating effects of the compared turns.
+            Can be clockwise or counter-clockwise (-tolerance has the same effect as +tolerance).
+            </param>
+        </member>
+        <member name="P:Strilanc.Angle.Turn.NaturalAngle">
+            <summary>Returns the angle corresponding to a rotation by the given turn, in counter-clockwise radians.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Turn.IsCounterClockwise">
+            <summary>Determines if this turn represents a positive counter-clockwise rotation.</summary>
+        </member>
+        <member name="P:Strilanc.Angle.Turn.IsClockwise">
+            <summary>Determines if this turn represents a positive clockwise rotation.</summary>
+        </member>
+    </members>
+</doc>
