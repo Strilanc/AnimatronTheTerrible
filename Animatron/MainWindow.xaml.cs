@@ -156,7 +156,7 @@ namespace Animatron {
                 Delays = delays;
             }
             public double GetX(TimeSpan t) {
-                return t.TotalSeconds*100 + 150;
+                return t.TotalSeconds*100 + 100;
             }
             public double GetY(EndPoint endPoint) {
                 for (var i = 0; i < EndPoints.Count; i++)
@@ -197,11 +197,9 @@ namespace Animatron {
             animation.LinkToCanvas(canvas, life);
 
             var stateD = animation.Dynamic(step => {
-                var period = 3.Seconds();
-
-                var t1 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds).Seconds();
-                var t2 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds / 2).Seconds();
-                var t3 = 0.Seconds();// Math.Sin(step.NextTotalElapsedTime.TotalSeconds / 3).Seconds();
+                var t1 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds).Seconds().DividedBy(3);
+                var t2 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds * 3).Seconds().DividedBy(3);
+                var t3 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds * 2).Seconds().DividedBy(3);
 
                 var client1 = new EndPoint("Client A", skew: 0.Seconds() + t1);
                 var server = new EndPoint("Server", skew: 0.Seconds() + t2);
