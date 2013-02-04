@@ -17,8 +17,8 @@ public struct PointDesc {
         this.StrokeThickness = strokeThickness;
     }
     public void Draw(Ellipse ellipse) {
-        ellipse.SetValue(Canvas.LeftProperty, Pos.X + Radius);
-        ellipse.SetValue(Canvas.TopProperty, Pos.Y + Radius);
+        ellipse.SetValue(Canvas.LeftProperty, Pos.X - Radius);
+        ellipse.SetValue(Canvas.TopProperty, Pos.Y - Radius);
         ellipse.Width = Radius * 2;
         ellipse.Height = Radius * 2;
         ellipse.Fill = Fill;
