@@ -67,7 +67,8 @@ namespace Animatron {
                 Properties.Settings.Default.Save();
             };
             this.Loaded += (sender, arg) => {
-                Animate(Lifetime.Immortal);
+                //Animate(Lifetime.Immortal);
+                Animate2(Lifetime.Immortal);
                 updateFocus();
             };
             var oldPos = (Point?)null;
@@ -344,6 +345,67 @@ namespace Animatron {
                         (int)Math.Ceiling(Properties.Settings.Default.focusHeight), 
                         96, 
                         96, 
+                        PixelFormats.Pbgra32);
+                    rtb.Render(this);
+                    encoder.Frames.Add(BitmapFrame.Create(rtb));
+                }
+                if (wasRecording && !Recording) {
+                    using (var f = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
+                        encoder.Save(f);
+                        encoder = new GifBitmapEncoder();
+                    }
+                }
+                wasRecording = Recording;
+
+                var step = new Step(
+                    previousTotalElapsedTime: t,
+                    timeStep: stepdt);
+
+                foreach (var e in animation.StepActions.CurrentItems())
+                    e.Value.Invoke(step);
+
+                await Task.Delay(stepdt);
+            }
+
+            //await animation.Run(life, 50.Milliseconds());
+        }
+        private async Task Animate2(Lifetime life) {
+            var animation = new Animation();
+            animation.LinkToCanvas(canvas, life);
+
+            var state = animation.Dynamic(step => {
+                var t = step.NextTotalElapsedTime.TotalSeconds;
+                var x = Math.Cos(t) * 100 + 150;
+                var y = Math.Sin(t) * 100 + 150;
+                var vx = Math.Cos(3*t);
+                var vy = Math.Sin(3*t);
+
+                var c = new Point(x, y);
+                var v = new Vector(vx, vy);
+                var r = 20;
+                var li = new LineSegment(new Point(150 - 89, 150 - 89), new Point(150 + 50, 150 + 20));
+                var h = GeometryUtilities.WhenMovingCircleWillIntersectLineSegment(c, r, v, li);
+
+                return new {c, r, v, li, h};
+            });
+
+            animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.li, Brushes.Black, 1)), life);
+            animation.Points.Add(state.Select(e => new PointDesc(e.c, Brushes.Black, Brushes.Gray, e.r, 1)), life);
+            animation.Lines.Add(state.Select(e => new LineSegmentDesc(new LineSegment(e.c, e.v * 1000), Brushes.Red, 1)), life);
+            animation.Lines.Add(state.Select(e => new LineSegmentDesc(new LineSegment(e.c + new Vector(e.v.Y, -e.v.X) * e.r, e.v * 1000), Brushes.LightGray, 1)), life);
+            animation.Lines.Add(state.Select(e => new LineSegmentDesc(new LineSegment(e.c + new Vector(-e.v.Y, e.v.X) * e.r, e.v * 1000), Brushes.LightGray, 1)), life);
+            animation.Points.Add(state.Select(e => new PointDesc(e.h.HasValue ? (e.c + e.v * e.h.Value) : new Point(-10000, -10000), Brushes.Gray, Brushes.LightGray, e.r, 1)), life);
+            
+            var wasRecording = false;
+            var encoder = new GifBitmapEncoder();
+            var stepdt = 50.Milliseconds();
+            for (var t = 0.Seconds(); t < 500.Seconds(); t += stepdt) {
+                if (Recording) {
+                    var rtb = new RenderTargetBitmap(
+                        (int)Math.Ceiling(Properties.Settings.Default.focusWidth),
+                        (int)Math.Ceiling(Properties.Settings.Default.focusHeight),
+                        96,
+                        96,
                         PixelFormats.Pbgra32);
                     rtb.Render(this);
                     encoder.Frames.Add(BitmapFrame.Create(rtb));

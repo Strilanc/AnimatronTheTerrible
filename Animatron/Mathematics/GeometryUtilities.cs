@@ -54,6 +54,55 @@ namespace SnipSnap.Mathematics {
                     select (IntersectionParameters?)new IntersectionParameters {T = t, S = s}
                    ).FirstOrDefault();
         }
+        public static Vector ProjectOnto(this Vector v, Vector p) {
+            return p * ((v * p) / (p * p));
+        }
+        public static Vector PerpOnto(this Vector v, Vector p) {
+            return v - v.ProjectOnto(p);
+        }
+        public static double DistanceFrom(this Point p1, Point p2) {
+            var d = p1 - p2;
+            return Math.Sqrt(d * d);
+        }
+        public static double DistanceFrom(this Point p, LineSegment line) {
+            var s = p.LerpProjectOnto(line);
+            if (s < 0) return p.DistanceFrom(line.Start);
+            if (s > 1) return p.DistanceFrom(line.End);
+            return p.DistanceFrom(line.LerpAcross(s));
+        }
+        ///<summary>Returns the first non-negative time, if any, where a moving circle will intersect a fixed line segment.</summary>
+        public static double? WhenMovingCircleWillIntersectLineSegment(Point center, double radius, Vector velocity, LineSegment line) {
+            var epsilon = 0.00001;
+
+            // use whatever's earliest and is actually touching
+            return new[] {
+                WhenMovingCircleWillIntersectExtendedLine(center, radius, velocity, line.Start, line.Delta),
+                WhenMovingCircleWillIntersectPoint(center, radius, velocity, line.Start),
+                WhenMovingCircleWillIntersectPoint(center, radius, velocity, line.End)
+            }.FirstOrDefault(t => t.HasValue && (center + velocity * t.GetValueOrDefault()).DistanceFrom(line) <= radius + epsilon);
+        }
+        ///<summary>Returns the first non-negative time, if any, where a moving circle will intersect a fixed extended line.</summary>
+        public static double? WhenMovingCircleWillIntersectExtendedLine(Point center, double radius, Vector velocity, Point pointOnLine, Vector displacementAlongLine) {
+            var a = (center - pointOnLine).PerpOnto(displacementAlongLine);
+            if (a * a - radius * radius <= 0) return 0; // already touching at t=0?
+            var b = velocity.PerpOnto(displacementAlongLine);
+            var kissTime = QuadraticRoots(b * b, a * b * 2, a * a - radius * radius)
+                .Where(e => e >= 0)
+                .Cast<double?>()
+                .FirstOrDefault();
+            return kissTime;
+        }
+        ///<summary>Returns the first non-negative time, if any, where a moving circle will intersect a fixed point.</summary>
+        public static double? WhenMovingCircleWillIntersectPoint(Point center, double radius, Vector velocity, Point point) {
+            var a = center - point;
+            if (a * a - radius * radius <= 0) return 0; // already touching at t=0?
+            var b = velocity;
+            var kissTime = QuadraticRoots(b * b, a * b * 2, a * a - radius * radius)
+                .Where(e => e >= 0)
+                .Cast<double?>()
+                .FirstOrDefault();
+            return kissTime;
+        }
         public static IEnumerable<double> QuadraticRoots(double a, double b, double c) {
             // degenerate case (0x^2 + bc + c == 0)
             if (a == 0) {
