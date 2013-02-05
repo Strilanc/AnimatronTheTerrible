@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Mime;
-using System.Reactive;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -67,8 +62,11 @@ namespace Animatron {
                 Properties.Settings.Default.Save();
             };
             this.Loaded += (sender, arg) => {
-                //Animate(Lifetime.Immortal);
-                Animate2(Lifetime.Immortal);
+                var life = Lifetime.Immortal;
+                //var animation = CreateNetworkAnimation(life);
+                var animation = CreateMovingCircleIntersectsLineAnimation(life);
+                animation.LinkToCanvas(canvas, life);
+                RunWithPotentialRecording(animation);
                 updateFocus();
             };
             var oldPos = (Point?)null;
@@ -193,9 +191,8 @@ namespace Animatron {
                 Measurements = measurements;
             }
         }
-        private async Task Animate(Lifetime life) {
+        private static Animation CreateNetworkAnimation(Lifetime life) {
             var animation = new Animation();
-            animation.LinkToCanvas(canvas, life);
 
             var stateD = animation.Dynamic(step => {
                 var t1 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds).Seconds().DividedBy(3);
@@ -335,43 +332,10 @@ namespace Animatron {
                     foreground: new SolidColorBrush(Colors.Gray))), life);
             }
 
-            var wasRecording = false;
-            var encoder = new GifBitmapEncoder();
-            var stepdt = 50.Milliseconds();
-            for (var t = 0.Seconds(); t < 500.Seconds(); t += stepdt) {
-                if (Recording) {
-                    var rtb = new RenderTargetBitmap(
-                        (int)Math.Ceiling(Properties.Settings.Default.focusWidth),
-                        (int)Math.Ceiling(Properties.Settings.Default.focusHeight), 
-                        96, 
-                        96, 
-                        PixelFormats.Pbgra32);
-                    rtb.Render(this);
-                    encoder.Frames.Add(BitmapFrame.Create(rtb));
-                }
-                if (wasRecording && !Recording) {
-                    using (var f = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
-                        encoder.Save(f);
-                        encoder = new GifBitmapEncoder();
-                    }
-                }
-                wasRecording = Recording;
-
-                var step = new Step(
-                    previousTotalElapsedTime: t,
-                    timeStep: stepdt);
-
-                foreach (var e in animation.StepActions.CurrentItems())
-                    e.Value.Invoke(step);
-
-                await Task.Delay(stepdt);
-            }
-
-            //await animation.Run(life, 50.Milliseconds());
+            return animation;
         }
-        private async Task Animate2(Lifetime life) {
+        private static Animation CreateMovingCircleIntersectsLineAnimation(Lifetime life) {
             var animation = new Animation();
-            animation.LinkToCanvas(canvas, life);
 
             var state = animation.Dynamic(step => {
                 var t = step.NextTotalElapsedTime.TotalSeconds;
@@ -395,10 +359,14 @@ namespace Animatron {
             animation.Lines.Add(state.Select(e => new LineSegmentDesc(new LineSegment(e.c + new Vector(e.v.Y, -e.v.X) * e.r, e.v * 1000), Brushes.LightGray, 1)), life);
             animation.Lines.Add(state.Select(e => new LineSegmentDesc(new LineSegment(e.c + new Vector(-e.v.Y, e.v.X) * e.r, e.v * 1000), Brushes.LightGray, 1)), life);
             animation.Points.Add(state.Select(e => new PointDesc(e.h.HasValue ? (e.c + e.v * e.h.Value) : new Point(-10000, -10000), Brushes.Gray, Brushes.LightGray, e.r, 1)), life);
-            
+
+            return animation;
+        }
+
+        private async Task RunWithPotentialRecording(Animation animation, TimeSpan? frameTime= null) {
             var wasRecording = false;
             var encoder = new GifBitmapEncoder();
-            var stepdt = 50.Milliseconds();
+            var stepdt = frameTime ?? 50.Milliseconds();
             for (var t = 0.Seconds(); t < 500.Seconds(); t += stepdt) {
                 if (Recording) {
                     var rtb = new RenderTargetBitmap(
@@ -427,8 +395,6 @@ namespace Animatron {
 
                 await Task.Delay(stepdt);
             }
-
-            //await animation.Run(life, 50.Milliseconds());
         }
     }
     public static class Util {
