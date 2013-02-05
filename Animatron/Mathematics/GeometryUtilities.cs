@@ -22,6 +22,9 @@ namespace SnipSnap.Mathematics {
             return vector * direction.Normal();
         }
 
+        public static Vector Perp(this Vector v) {
+            return new Vector(-v.Y, v.X);
+        }
         ///<summary>Creates a line segment based on the given end points.</summary>
         public static LineSegment To(this Point endPoint1, Point endPoint2) {
             return new LineSegment(endPoint1, endPoint2);
