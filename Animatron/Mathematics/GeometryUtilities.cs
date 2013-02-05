@@ -79,7 +79,8 @@ namespace SnipSnap.Mathematics {
                 WhenMovingCircleWillIntersectExtendedLine(center, radius, velocity, line.Start, line.Delta),
                 WhenMovingCircleWillIntersectPoint(center, radius, velocity, line.Start),
                 WhenMovingCircleWillIntersectPoint(center, radius, velocity, line.End)
-            }.FirstOrDefault(t => t.HasValue && (center + velocity * t.GetValueOrDefault()).DistanceFrom(line) <= radius + epsilon);
+            }.OrderBy(e => e)
+             .FirstOrDefault(t => t.HasValue && (center + velocity * t.GetValueOrDefault()).DistanceFrom(line) <= radius + epsilon);
         }
         ///<summary>Returns the first non-negative time, if any, where a moving circle will intersect a fixed extended line.</summary>
         public static double? WhenMovingCircleWillIntersectExtendedLine(Point center, double radius, Vector velocity, Point pointOnLine, Vector displacementAlongLine) {
