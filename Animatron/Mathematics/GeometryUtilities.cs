@@ -61,7 +61,7 @@ namespace SnipSnap.Mathematics {
             return p * ((v * p) / (p * p));
         }
         public static Vector PerpOnto(this Vector v, Vector p) {
-            return v - v.ProjectOnto(p);
+            return v.ProjectOnto(p.Perp());
         }
         public static double DistanceFrom(this Point p1, Point p2) {
             var d = p1 - p2;
