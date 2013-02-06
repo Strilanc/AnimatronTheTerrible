@@ -79,15 +79,14 @@
     </ApplicationDefinition>
     <Compile Include="Animations\NetworkSequenceDiagram.cs" />
     <Compile Include="Animations\MovingCircleIntersectsLine.cs" />
-    <Compile Include="Util.cs" />
+    <Compile Include="Animation\Util.cs" />
     <Compile Include="Util\TimeUtil.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Animation.cs" />
+    <Compile Include="Animation\Animation.cs" />
     <Compile Include="Controls\TextDesc.cs" />
-    <Compile Include="Controls\Factory.cs" />
     <Compile Include="Controls\PointDesc.cs" />
     <Compile Include="Controls\LineSegmentDesc.cs" />
     <Compile Include="Util\AnonymousDisposable.cs" />
@@ -95,13 +94,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GameMechanics\Ball.cs" />
-    <Compile Include="GameMechanics\Connector.cs" />
-    <Compile Include="GameMechanics\Game.cs" />
-    <Compile Include="GameMechanics\GameDrawAsControlsUtilities.cs" />
-    <Compile Include="GameMechanics\GameMechanicUtilities.cs" />
-    <Compile Include="GameMechanics\Step.cs" />
-    <Compile Include="GameMechanics\GameUtilities.cs" />
+    <Compile Include="Animation\Step.cs" />
+    <Compile Include="Animation\GameUtilities.cs" />
     <Compile Include="Util\IObservableLatest.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
