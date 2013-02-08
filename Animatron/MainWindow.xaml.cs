@@ -2,17 +2,21 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TwistedOak.Element.Env;
 using TwistedOak.Util;
+using System.Reactive.Linq;
 
 namespace Animatron {
     public partial class MainWindow {
-        public bool Recording = false;
         public MainWindow() {
+            var life = Lifetime.Immortal;
+            var animation = Animations.NetworkSequenceDiagram.CreateWobblyThreePlayerNetworkAnimation(life);
+
             InitializeComponent();
+            var isRecording = new ObservableValue<bool>();
+            
             txtPath.Text = string.IsNullOrWhiteSpace(Properties.Settings.Default.path) ? 
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "GifRecordings") :
                 Properties.Settings.Default.path;
@@ -21,7 +25,7 @@ namespace Animatron {
                 Properties.Settings.Default.Save();
             };
             btnRecord.Click += (sender, arg) => {
-                if (!Recording) {
+                if (!isRecording.Current) {
                     if (!Directory.Exists(txtPath.Text)) {
                         try {
                             Directory.CreateDirectory(txtPath.Text);
@@ -36,30 +40,36 @@ namespace Animatron {
                     Properties.Settings.Default.focusHeight = Math.Max(50, this.ActualWidth);
                     Properties.Settings.Default.focusWidth = Math.Max(50, this.ActualHeight);
                     Properties.Settings.Default.Save();
-                    Recording = true;
+                    isRecording.Update(true);
                 } else {
-                    Recording = false;
+                    isRecording.Update(false);
                     this.ResizeMode = ResizeMode.CanResize;
                     btnRecord.Content = "Start Recording";
                     txtPath.IsEnabled = true;
                 }
             };
+
             this.Loaded += (sender, arg) => {
-                var life = Lifetime.Immortal;
-                var animation = Animations.MovingCircleIntersectsLine.Animate(life);
                 animation.LinkToCanvas(canvas, life);
-                RunWithPotentialRecording(animation);
+                RunWithPotentialRecording(animation, isRecording);
                 this.Width = Math.Max(50, Properties.Settings.Default.focusWidth);
                 this.Height = Math.Max(50, Properties.Settings.Default.focusHeight);
             };
         }
 
-        private async Task RunWithPotentialRecording(Animation animation, TimeSpan? frameTime= null) {
-            var wasRecording = false;
-            var encoder = new GifBitmapEncoder();
+        private async Task RunWithPotentialRecording(Animation animation, IObservableLatest<bool> recording, TimeSpan? frameTime = null) {
             var stepdt = frameTime ?? 50.Milliseconds();
+            
+            var encoder = new GifBitmapEncoder();
+            recording.SkipWhile(e => !e).DistinctUntilChanged().Where(e => !e).Subscribe(e => {
+                using (var f = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
+                    encoder.Save(f);
+                    encoder = new GifBitmapEncoder();
+                }
+            });
+
             for (var t = 0.Seconds(); t < 500.Seconds(); t += stepdt) {
-                if (Recording) {
+                if (recording.Current) {
                     var rtb = new RenderTargetBitmap(
                         (int)Math.Floor(canvas.ActualWidth),
                         (int)Math.Floor(canvas.ActualHeight),
@@ -69,13 +79,6 @@ namespace Animatron {
                     rtb.Render(canvas);
                     encoder.Frames.Add(BitmapFrame.Create(rtb));
                 }
-                if (wasRecording && !Recording) {
-                    using (var f = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
-                        encoder.Save(f);
-                        encoder = new GifBitmapEncoder();
-                    }
-                }
-                wasRecording = Recording;
 
                 var step = new Step(
                     previousTotalElapsedTime: t,

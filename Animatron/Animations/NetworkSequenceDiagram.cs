@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Windows;
@@ -14,20 +15,81 @@ using LineSegment = SnipSnap.Mathematics.LineSegment;
 
 namespace Animations {
     public static class NetworkSequenceDiagram {
+        public static Animation CreateTwoPlayerSyncedNetworkAnimation(Lifetime life) {
+            var animation = new Animation();
+
+            var state = animation.Dynamic(step => {
+                var t = (step.NextTotalElapsedTime.TotalSeconds*2/3.0).SmoothCycle(0, 1, 0, -1);
+
+                var t1 = t.Seconds();
+                var t2 = TimeSpan.Zero;
+
+                var client = new EndPoint("Client", skew: 0.Seconds() + t1);
+                var server = new EndPoint("Server", skew: 0.Seconds() + t2);
+
+                var graph = new EndPointGraph(
+                    new[] { server, client },
+                    new Dictionary<Tuple<EndPoint, EndPoint>, TimeSpan> {
+                        {Tuple.Create(client, server), 0.5.Seconds() + t2 - t1},
+                        {Tuple.Create(server, client), 0.5.Seconds() + t1 - t2},
+                    });
+
+                var m1 = new Message("Message #1", graph, client, server, client.Skew + 1.Seconds());
+                var m2 = new Message("Message #2", graph, server, client, m1.ArrivalTime);
+                var m3 = new Message("Message #3", graph, client, server, m2.ArrivalTime);
+
+                var s1 = new Measurement("Delay (Client->Server)", m1.Source, m1.Destination, m1.SentTime, m1.ArrivalTime, 240);
+                var s3 = new Measurement("Delay (Server->Client)", m2.Source, m2.Destination, m2.SentTime, m2.ArrivalTime, 60);
+                var s2 = new Measurement("Round Trip Time", m1.Source, m2.Destination, m1.SentTime, m2.ArrivalTime, 20);
+                var s4 = new Measurement("Clock Skew", client, server, client.Skew, server.Skew, null);
+
+                return new GraphMessages(graph, new[] { m1, m2, m3 }, new[] { s1, s2, s3, s4 });
+            });
+
+            return CreateNetworkAnimation(animation, state, life, 2, 4, 3);
+        }
+        public static Animation CreateTwoPlayerVaryingNetworkAnimation(Lifetime life) {
+            var animation = new Animation();
+
+            var state = animation.Dynamic(step => {
+                var t = step.NextTotalElapsedTime.TotalSeconds;
+
+                var peerA = new EndPoint("Peer A", skew: 0.Seconds());
+                var peerB = new EndPoint("Peer B", skew: 0.Seconds());
+
+                var r = new Random(43257);
+                var md = 5.Range().Select(j => (t * 4).SmoothCycle(20.Range().Select(i => r.NextDouble()).ToArray())).ToArray();
+                var ix = 0;
+                var graph = new EndPointGraph(
+                    new[] { peerB, peerA },
+                    new Dictionary<Tuple<EndPoint, EndPoint>, Func<TimeSpan>> {
+                        {Tuple.Create(peerA, peerB), () => 0.5.Seconds() + 0.4.Seconds().Times(md[ix++])},
+                        {Tuple.Create(peerB, peerA), () => 0.5.Seconds()},
+                    }.SelectValue(e => e.Value()));
+
+                var messages = 5.Range().SelectMany(i => graph.Delays.Keys.Select(e => new Message("tick", graph, e.Item1, e.Item2, (i).Seconds()))).ToArray();
+                var s = new Measurement("Tick Period", peerB, peerB, messages[0].ArrivalTime, messages[0].ArrivalTime + 1.Seconds(), 20);
+                var s2 = new Measurement("Jitter", peerB, peerB, messages[0].ArrivalTime + 1.Seconds(), messages[2].ArrivalTime, 60);
+
+                return new GraphMessages(graph, messages, new[] {s, s2});
+            });
+
+            return CreateNetworkAnimation(animation, state, life, 2, 2, 10);
+        }
         public static Animation CreateWobblyThreePlayerNetworkAnimation(Lifetime life) {
             var animation = new Animation();
 
             var state = animation.Dynamic(step => {
                 var t1 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds).Seconds().DividedBy(3);
-                var t2 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds*3).Seconds().DividedBy(3);
-                var t3 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds*2).Seconds().DividedBy(3);
+                var t2 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds * 3).Seconds().DividedBy(3);
+                var t3 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds * 2).Seconds().DividedBy(3);
 
                 var client1 = new EndPoint("Client A", skew: 0.Seconds() + t1);
                 var server = new EndPoint("Server", skew: 0.Seconds() + t2);
                 var client2 = new EndPoint("Client B", skew: 0.Seconds() + t3);
 
                 var graph = new EndPointGraph(
-                    new[] {client1, server, client2},
+                    new[] { client1, server, client2 },
                     new Dictionary<Tuple<EndPoint, EndPoint>, TimeSpan> {
                         {Tuple.Create(client1, server), 0.5.Seconds() + t2 - t1},
                         {Tuple.Create(server, client1), 0.5.Seconds() + t1 - t2},
@@ -39,10 +101,12 @@ namespace Animations {
 
                 var m1 = new Message("A1", graph, client1, server, client1.Skew + 1.Seconds());
                 var m2 = new Message("A2", graph, server, client2, m1.ArrivalTime);
+                var m2a = new Message("A2", graph, server, client1, m1.ArrivalTime);
                 var m3 = new Message("A3", graph, client2, client1, m2.ArrivalTime);
 
                 var m4 = new Message("B1", graph, client2, server, client2.Skew + 4.Seconds());
                 var m5 = new Message("B2", graph, server, client1, m4.ArrivalTime);
+                var m5a = new Message("B2", graph, server, client2, m4.ArrivalTime);
                 var m6 = new Message("B3", graph, client1, client2, m5.ArrivalTime);
 
                 var s1 = new Measurement("Delay (A->S)", m1.Source, m1.Destination, m1.SentTime, m1.ArrivalTime, 60);
@@ -55,17 +119,20 @@ namespace Animations {
                 var s7 = new Measurement("Skew (A)", client1, server, client1.Skew, server.Skew, null);
                 var s8 = new Measurement("Skew (B)", client2, server, client2.Skew, server.Skew, null);
 
-                return new GraphMessages(graph, new[] {m1, m2, m3, m4, m5, m6}, new[] {s1, s2, s3, s4, s5, s6, s7, s8});
+                return new GraphMessages(
+                    graph,
+                    new[] { m1, m2, m3, m4, m5, m6, m2a, m5a },
+                    new[] { s1, s2, s3, s4, s5, s6, s7, s8 });
             });
 
-            return CreateNetworkAnimation(animation, state, life);
+            return CreateNetworkAnimation(animation, state, life, 3, 8, 8);
         }
-        private static Animation CreateNetworkAnimation(Animation animation, IObservable<GraphMessages> stateD, Lifetime life) {
+        private static Animation CreateNetworkAnimation(Animation animation, IObservable<GraphMessages> stateD, Lifetime life, int endPointCount, int measureCount, int messageCount) {
             var state = new Subject<GraphMessages>();
             stateD.Subscribe(state, life);
 
             // end points
-            foreach (var i in 3.Range()) {
+            foreach (var i in endPointCount.Range()) {
                 // timeline
                 animation.Lines.Add(state.Select(e => new LineSegmentDesc(
                     new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i])).Sweep(new Vector(1000, 0)),
@@ -92,7 +159,7 @@ namespace Animations {
             }
 
             // measurements
-            foreach (var i in 8.Range()) {
+            foreach (var i in measureCount.Range()) {
                 var px = from s in state
                          let m = s.Measurements[i]
                          let x1 = s.Graph.GetX(m.X1)
@@ -129,7 +196,7 @@ namespace Animations {
             }
 
             // messages
-            foreach (var i in 6.Range()) {
+            foreach (var i in messageCount.Range()) {
                 var px = from s in state
                          let m = s.Messages[i]
                          select new { s, m };
@@ -176,13 +243,14 @@ namespace Animations {
             public readonly EndPoint Source;
             public readonly EndPoint Destination;
             public readonly TimeSpan SentTime;
-            public TimeSpan ArrivalTime { get { return SentTime + System.Delays[Tuple.Create(Source, Destination)]; } }
+            public TimeSpan ArrivalTime { get; private set; }
             public Message(string text, EndPointGraph system, EndPoint source, EndPoint destination, TimeSpan sentTime) {
                 Text = text;
                 System = system;
                 Source = source;
                 Destination = destination;
                 SentTime = sentTime;
+                ArrivalTime = SentTime + System.Delays[Tuple.Create(Source, Destination)];
             }
             public Point PosSourcePoint { get { return new Point(System.GetX(SentTime), System.GetY(Source)); } }
             public Point PosEndPoint { get { return new Point(System.GetX(ArrivalTime), System.GetY(Destination)); } }
