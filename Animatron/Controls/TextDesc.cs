@@ -47,6 +47,8 @@ public sealed class TextDesc {
         xy.Select(e => e.Y).DistinctUntilChanged().Subscribe(e => textBlock.SetValue(Canvas.TopProperty, e), lifetime);
         Reference.DistinctUntilChanged().Subscribe(e => textBlock.RenderTransformOrigin = e, lifetime);
 
+        var basis = Basis.FromDirectionAndUnits(Dir.AlongPositiveX, Basis.DegreesPerRotation, false);
+        Direction.DistinctUntilChanged().Subscribe(e => textBlock.RenderTransform = new RotateTransform(basis.DirToSignedAngle(e)));
         FontStyle.DistinctUntilChanged().Subscribe(e => textBlock.FontStyle = e, lifetime);
         FontFamily.DistinctUntilChanged().Subscribe(e => textBlock.FontFamily = e, lifetime);
         FontWeight.DistinctUntilChanged().Subscribe(e => textBlock.FontWeight = e, lifetime);
