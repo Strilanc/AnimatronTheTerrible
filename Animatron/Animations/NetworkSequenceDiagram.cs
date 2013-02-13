@@ -175,8 +175,8 @@ namespace Animations {
                 // label
                 animation.Labels.Add(
                     new TextDesc(
-                        text: state.Select(e => e.Graph.EndPoints[i].Name).Take(1),
-                        pos: state.Select(e => new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i]))).Take(1),
+                        text: state.Select(e => e.Graph.EndPoints[i].Name),
+                        pos: state.Select(e => new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i]))),
                         fontWeight: FontWeights.Bold.ToSingletonObservable(),
                         reference: new Point(1.1, 0.5).ToSingletonObservable()), 
                     life);
