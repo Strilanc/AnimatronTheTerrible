@@ -161,16 +161,17 @@ namespace Animations {
             return CreateNetworkAnimation(animation, state, life, 3, 8, 8);
         }
         private static Animation CreateNetworkAnimation(Animation animation, IObservable<GraphMessages> stateD, Lifetime life, int endPointCount, int measureCount, int messageCount) {
-            var state = new Subject<GraphMessages>();
-            stateD.Subscribe(state, life);
+            var state = stateD.Cache(life);
 
             // end points
             foreach (var i in endPointCount.Range()) {
                 // timeline
-                animation.Lines.Add(state.Select(e => new LineSegmentDesc(
-                    new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i])).Sweep(new Vector(1000, 0)),
-                    new SolidColorBrush(Colors.Black),
-                    3)), life);
+                animation.Lines.Add(
+                    new LineSegmentDesc(
+                        state.Select(e => new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i])).Sweep(new Vector(1000, 0))),
+                        Brushes.Black.ToSingletonObservable(),
+                        3.0.ToSingletonObservable()),
+                    life);
                 // label
                 animation.Labels.Add(
                     new TextDesc(
@@ -181,10 +182,13 @@ namespace Animations {
                     life);
                 // tick marks
                 foreach (var j in 10.Range()) {
-                    animation.Lines.Add(state.Select(e => new LineSegmentDesc(
-                        new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew + j.Seconds()), e.Graph.GetY(e.Graph.EndPoints[i]) - 5).Sweep(new Vector(0, 10)),
-                        new SolidColorBrush(Colors.Black),
-                        2)), life);
+                    animation.Lines.Add(
+                        new LineSegmentDesc(
+                            state.Select(e =>
+                                new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew + j.Seconds()), e.Graph.GetY(e.Graph.EndPoints[i]) - 5).Sweep(new Vector(0, 10))),
+                            Brushes.Black.ToSingletonObservable(),
+                            2.0.ToSingletonObservable()),
+                        life);
 
                     // labels
                     animation.Labels.Add(
@@ -198,29 +202,33 @@ namespace Animations {
 
             // measurements
             foreach (var i in measureCount.Range()) {
-                var px = from s in state
-                         let m = s.Measurements[i]
-                         let x1 = s.Graph.GetX(m.X1)
-                         let y1 = s.Graph.GetY(m.V1)
-                         let x2 = s.Graph.GetX(m.X2)
-                         let y2 = s.Graph.GetY(m.V2)
-                         let y = m.Y ?? ((y1 + y2) / 2)
-                         select new { s, m, x1, y1, x2, y2, y };
-                animation.Lines.Add(px.Select(e => new LineSegmentDesc(
-                    new LineSegment(new Point(e.x1, e.y), new Point(e.x2, e.y)),
-                    new SolidColorBrush(Colors.Black),
-                    2,
-                    true)), life);
-                animation.Lines.Add(px.Select(e => new LineSegmentDesc(
-                    new LineSegment(new Point(e.x1, e.y1), new Point(e.x1, e.y)),
-                    new SolidColorBrush(Colors.Red),
-                    1,
-                    true)), life);
-                animation.Lines.Add(px.Select(e => new LineSegmentDesc(
-                    new LineSegment(new Point(e.x2, e.y2), new Point(e.x2, e.y)),
-                    new SolidColorBrush(Colors.Red),
-                    1,
-                    true)), life);
+                var px = (from s in state
+                          let m = s.Measurements[i]
+                          let x1 = s.Graph.GetX(m.X1)
+                          let y1 = s.Graph.GetY(m.V1)
+                          let x2 = s.Graph.GetX(m.X2)
+                          let y2 = s.Graph.GetY(m.V2)
+                          let y = m.Y ?? ((y1 + y2) / 2)
+                          select new { s, m, x1, y1, x2, y2, y }).Cache(life);
+                animation.Lines.Add(
+                    new LineSegmentDesc(
+                        px.Select(e => new LineSegment(new Point(e.x1, e.y), new Point(e.x2, e.y))),
+                        Brushes.Black.ToSingletonObservable(),
+                        2.0.ToSingletonObservable(),
+                        true.ToSingletonObservable()),
+                    life);
+                animation.Lines.Add(
+                    new LineSegmentDesc(
+                        px.Select(e => new LineSegment(new Point(e.x1, e.y1), new Point(e.x1, e.y))),
+                        Brushes.Red.ToSingletonObservable(),
+                        dashed: true.ToSingletonObservable()),
+                    life);
+                animation.Lines.Add(
+                    new LineSegmentDesc(
+                        px.Select(e => new LineSegment(new Point(e.x2, e.y2), new Point(e.x2, e.y))),
+                        Brushes.Red.ToSingletonObservable(),
+                        dashed: true.ToSingletonObservable()),
+                    life);
                 var off1 = new Vector(5, -5);
                 var off2 = new Vector(5, 12);
                 animation.Labels.Add(
@@ -239,13 +247,14 @@ namespace Animations {
 
             // messages
             foreach (var i in messageCount.Range()) {
-                var px = from s in state
-                         let m = s.Messages[i]
-                         select new { s, m };
-                animation.Lines.Add(px.Select(e => new LineSegmentDesc(
-                    e.m.Pos,
-                    new SolidColorBrush(Colors.Black),
-                    1)), life);
+                var px = (from s in state
+                          let m = s.Messages[i]
+                          select new { s, m }).Cache(life);
+                animation.Lines.Add(
+                    new LineSegmentDesc(
+                        px.Select(e => e.m.Pos),
+                        Brushes.Black.ToSingletonObservable()),
+                    life);
 
                 animation.Points.Add(
                     new PointDesc(

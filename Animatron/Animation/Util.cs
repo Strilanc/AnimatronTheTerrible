@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive;
+using System.Reactive.Linq;
 using System.Windows;
 using SnipSnap.Mathematics;
 using Strilanc.Angle;
+using Strilanc.Value;
 using TwistedOak.Collections;
 using TwistedOak.Element.Env;
 using TwistedOak.Util;
@@ -15,6 +17,11 @@ namespace Animatron {
         }
         public static TimeSpan LerpTo(this TimeSpan dt1, TimeSpan dt2, double prop) {
             return dt1.Times(1 - prop) + dt2.Times(prop);
+        }
+        public static IObservable<T> Cache<T>(this IObservable<T> v, Lifetime life) {
+            var r = new ObservableValue<May<T>>();
+            v.Subscribe(e => r.Update(e, false), life);
+            return r.Where(e => e.HasValue).Select(e => e.ForceGetValue());
         }
         public static Vector Rotate(this Vector vector, Dir angle) {
             var d = Dir.FromVector(vector.X, vector.Y) + (angle - Dir.AlongPositiveX);

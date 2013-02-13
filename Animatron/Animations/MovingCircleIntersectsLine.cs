@@ -28,7 +28,7 @@ namespace Animations {
                 return new {c, r, v, li, h};
             });
 
-            animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.li, Brushes.Black, 1)), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.li)), life);
             animation.Points.Add(
                 new PointDesc(
                     state.Select(e => e.c),
@@ -37,9 +37,9 @@ namespace Animations {
                     state.Select(e => (double)e.r),
                     1.0.ToSingletonObservable()),
                 life);
-            animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.c.Sweep(e.v*1000), Brushes.Red, 1)), life);
-            animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.c.Sweep(e.v*1000) + e.v.Perp()*e.r, Brushes.LightGray, 1)), life);
-            animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.c.Sweep(e.v*1000) - e.v.Perp()*e.r, Brushes.LightGray, 1)), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v*1000)), Brushes.Red.ToSingletonObservable()), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) + e.v.Perp() * e.r), Brushes.LightGray.ToSingletonObservable()), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) - e.v.Perp() * e.r), Brushes.LightGray.ToSingletonObservable()), life);
             animation.Points.Add(
                 new PointDesc(
                     state.Select(e => (e.c + e.v * e.h) ?? new Point(-10000, -10000)), 

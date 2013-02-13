@@ -43,6 +43,9 @@
     <Reference Include="LinqToCollections">
       <HintPath>..\packages\Strilanc.LinqToCollections.1.0.1\lib\portable-net45+win8\LinqToCollections.dll</HintPath>
     </Reference>
+    <Reference Include="May">
+      <HintPath>..\packages\Strilanc.Value.May.1.0.2\lib\portable-net4+sl4+wp7+win8\May.dll</HintPath>
+    </Reference>
     <Reference Include="PerishableCollection">
       <HintPath>..\packages\TwistedOak.Collections.PerishableCollection.1.0.1\lib\portable-net45+win8\PerishableCollection.dll</HintPath>
     </Reference>
