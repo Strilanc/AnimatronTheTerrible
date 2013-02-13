@@ -29,11 +29,25 @@ namespace Animations {
             });
 
             animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.li, Brushes.Black, 1)), life);
-            animation.Points.Add(state.Select(e => new PointDesc(e.c, Brushes.Black, Brushes.Gray, e.r, 1)), life);
+            animation.Points.Add(
+                new PointDesc(
+                    state.Select(e => e.c),
+                    Brushes.Black.ToSingletonObservable(),
+                    Brushes.Gray.ToSingletonObservable(),
+                    state.Select(e => (double)e.r),
+                    1.0.ToSingletonObservable()),
+                life);
             animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.c.Sweep(e.v*1000), Brushes.Red, 1)), life);
             animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.c.Sweep(e.v*1000) + e.v.Perp()*e.r, Brushes.LightGray, 1)), life);
             animation.Lines.Add(state.Select(e => new LineSegmentDesc(e.c.Sweep(e.v*1000) - e.v.Perp()*e.r, Brushes.LightGray, 1)), life);
-            animation.Points.Add(state.Select(e => new PointDesc((e.c + e.v*e.h) ?? new Point(-10000, -10000), Brushes.Gray, Brushes.LightGray, e.r, 1)), life);
+            animation.Points.Add(
+                new PointDesc(
+                    state.Select(e => (e.c + e.v * e.h) ?? new Point(-10000, -10000)), 
+                    Brushes.Gray.ToSingletonObservable(), 
+                    Brushes.LightGray.ToSingletonObservable(), 
+                    state.Select(e => (double)e.r), 
+                    1.0.ToSingletonObservable()), 
+                life);
 
             return animation;
         }

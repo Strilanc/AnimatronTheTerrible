@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive;
 using System.Windows;
 using SnipSnap.Mathematics;
 using Strilanc.Angle;
@@ -18,6 +19,13 @@ namespace Animatron {
         public static Vector Rotate(this Vector vector, Dir angle) {
             var d = Dir.FromVector(vector.X, vector.Y) + (angle - Dir.AlongPositiveX);
             return new Vector(d.UnitX, d.UnitY) * vector.Length;
+        }
+        public static IObservable<T> ToSingletonObservable<T>(this T value) {
+            return new AnonymousObservable<T>(observer => {
+                observer.OnNext(value);
+                observer.OnCompleted();
+                return new AnonymousDisposable();
+            });
         }
         public static double SmoothLerpTo(this double from, double to, double p) {
             p = p*2 - 1;

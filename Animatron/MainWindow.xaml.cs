@@ -37,8 +37,8 @@ namespace Animatron {
                     txtPath.IsEnabled = false;
                     this.ResizeMode = ResizeMode.NoResize;
                     btnRecord.Content = "Stop Recording";
-                    Properties.Settings.Default.focusHeight = Math.Max(50, this.ActualWidth);
-                    Properties.Settings.Default.focusWidth = Math.Max(50, this.ActualHeight);
+                    Properties.Settings.Default.focusHeight = Math.Max(50, this.ActualHeight);
+                    Properties.Settings.Default.focusWidth = Math.Max(50, this.ActualWidth);
                     Properties.Settings.Default.Save();
                     isRecording.Update(true);
                 } else {

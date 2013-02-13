@@ -14,9 +14,9 @@ namespace Animatron {
     public sealed class Animation {
         public readonly PerishableCollection<Action<Step>> StepActions = new PerishableCollection<Action<Step>>(); 
         public readonly PerishableCollection<UIElement> Controls = new PerishableCollection<UIElement>();
-        public readonly PerishableCollection<IObservable<PointDesc>> Points = new PerishableCollection<IObservable<PointDesc>>();
+        public readonly PerishableCollection<PointDesc> Points = new PerishableCollection<PointDesc>();
         public readonly PerishableCollection<IObservable<LineSegmentDesc>> Lines = new PerishableCollection<IObservable<LineSegmentDesc>>();
-        public readonly PerishableCollection<IObservable<TextDesc>> Labels = new PerishableCollection<IObservable<TextDesc>>();
+        public readonly PerishableCollection<TextDesc> Labels = new PerishableCollection<TextDesc>();
 
         public IObservable<T> Dynamic<T>(Func<Step, T> stepper) {
             return new AnonymousObservable<T>(observer => {
@@ -36,7 +36,7 @@ namespace Animatron {
         public Animation() {
             Points.CurrentAndFutureItems().Subscribe(e => {
                 var r = new Ellipse();
-                e.Value.Subscribe(p => p.Draw(r), e.Lifetime);
+                e.Value.Link(r, e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
             Lines.CurrentAndFutureItems().Subscribe(e => {
@@ -46,7 +46,7 @@ namespace Animatron {
             });
             Labels.CurrentAndFutureItems().Subscribe(e => {
                 var r = new TextBlock();
-                e.Value.Subscribe(p => p.Draw(r), e.Lifetime);
+                e.Value.Link(r, e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
         }

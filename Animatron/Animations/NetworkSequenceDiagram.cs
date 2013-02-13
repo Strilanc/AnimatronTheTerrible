@@ -15,38 +15,71 @@ using LineSegment = SnipSnap.Mathematics.LineSegment;
 
 namespace Animations {
     public static class NetworkSequenceDiagram {
-        public static Animation CreateTwoPlayerSyncedNetworkAnimation(Lifetime life) {
+        public static Animation CreateCounterExample1(Lifetime life) {
             var animation = new Animation();
 
             var state = animation.Dynamic(step => {
-                var t = (step.NextTotalElapsedTime.TotalSeconds*2/3.0).SmoothCycle(0, 1, 0, -1);
+                var t = (step.NextTotalElapsedTime.TotalSeconds * 8).SmoothCycle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
-                var t1 = t.Seconds();
-                var t2 = TimeSpan.Zero;
+                var t1 = TimeSpan.Zero;
+                var t2 = t.Seconds();
 
-                var client = new EndPoint("Client", skew: 0.Seconds() + t1);
-                var server = new EndPoint("Server", skew: 0.Seconds() + t2);
+                var ra = new EndPoint("Robot A", skew: 0.Seconds() + t1);
+                var rb = new EndPoint("Robot B", skew: 0.Seconds() + t2);
 
                 var graph = new EndPointGraph(
-                    new[] { server, client },
+                    new[] { ra, rb },
                     new Dictionary<Tuple<EndPoint, EndPoint>, TimeSpan> {
-                        {Tuple.Create(client, server), 0.5.Seconds() + t2 - t1},
-                        {Tuple.Create(server, client), 0.5.Seconds() + t1 - t2},
+                        {Tuple.Create(ra, rb), 2.Seconds() + t2 - t1},
+                        {Tuple.Create(rb, ra), 2.Seconds() + t1 - t2},
                     });
 
-                var m1 = new Message("Message #1", graph, client, server, client.Skew + 1.Seconds());
-                var m2 = new Message("Message #2", graph, server, client, m1.ArrivalTime);
-                var m3 = new Message("Message #3", graph, client, server, m2.ArrivalTime);
+                var m1 = new Message("CA0=0s", graph, ra, rb, ra.Skew + 0.Seconds());
+                var m2 = new Message("CA1=1s", graph, rb, ra, rb.Skew + 1.Seconds());
+                var m3 = new Message("CB0=2s", graph, rb, ra, m1.ArrivalTime);
+                var m4 = new Message("CB1=3s", graph, ra, rb, m2.ArrivalTime);
 
-                var s1 = new Measurement("Delay (Client->Server)", m1.Source, m1.Destination, m1.SentTime, m1.ArrivalTime, 240);
-                var s3 = new Measurement("Delay (Server->Client)", m2.Source, m2.Destination, m2.SentTime, m2.ArrivalTime, 60);
-                var s2 = new Measurement("Round Trip Time", m1.Source, m2.Destination, m1.SentTime, m2.ArrivalTime, 20);
-                var s4 = new Measurement("Clock Skew", client, server, client.Skew, server.Skew, null);
+                var s1 = new Measurement("CA0", ra, ra, ra.Skew, m1.SentTime, 60);
+                var s2 = new Measurement("CA1", rb, rb, rb.Skew, m2.SentTime, 240);
+                var s3 = new Measurement("CB0", rb, rb, rb.Skew, m1.ArrivalTime, 280);
+                var s4 = new Measurement("CB1", ra, ra, ra.Skew, m2.ArrivalTime, 20);
+                var s5 = new Measurement("RTT/2*(CA1-CA0)/(CB1-CB0)", m2.Source, m1.Destination, m4.ArrivalTime, m4.ArrivalTime + (m1.ArrivalTime - rb.Skew - m1.SentTime + ra.Skew).DividedBy(m2.ArrivalTime - ra.Skew - m2.SentTime + rb.Skew).Seconds().Times(2), 240);
+                var s6 = new Measurement("RTT/2*(CB1-CB0)/(CA1-CA0)", m1.Source, m2.Destination, m3.ArrivalTime, m3.ArrivalTime + (m2.ArrivalTime - ra.Skew - m2.SentTime + rb.Skew).DividedBy(m1.ArrivalTime - rb.Skew - m1.SentTime + ra.Skew).Seconds().Times(2), 60);
 
-                return new GraphMessages(graph, new[] { m1, m2, m3 }, new[] { s1, s2, s3, s4 });
+                return new GraphMessages(graph, new[] { m1, m2, m3, m4 }, new[] { s1, s2, s3, s4, s5, s6 });
             });
 
-            return CreateNetworkAnimation(animation, state, life, 2, 4, 3);
+            return CreateNetworkAnimation(animation, state, life, 2, 6, 4);
+        }
+        public static Animation CreateCounterExample2(Lifetime life) {
+            var animation = new Animation();
+
+            var state = animation.Dynamic(step => {
+                var t = (step.NextTotalElapsedTime.TotalSeconds * 8).SmoothCycle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+
+                var t1 = TimeSpan.Zero;
+                var t2 = t.Seconds();
+
+                var ra = new EndPoint("Robot A", skew: 0.Seconds() + t1);
+                var rb = new EndPoint("Robot B", skew: 0.Seconds() + t2);
+
+                var graph = new EndPointGraph(
+                    new[] { ra, rb },
+                    new Dictionary<Tuple<EndPoint, EndPoint>, TimeSpan> {
+                        {Tuple.Create(ra, rb), 2.Seconds() + t2 - t1},
+                        {Tuple.Create(rb, ra), 2.Seconds() + t1 - t2},
+                    });
+
+                var m1 = new Message("I think it's t=0s.", graph, ra, rb, ra.Skew + 0.Seconds());
+                var m2 = new Message("Received at t=2s", graph, rb, ra, m1.ArrivalTime);
+
+                var s1 = new Measurement("Apparent Time Mistake = 2s+2s", ra, ra, m2.ArrivalTime, m2.ArrivalTime + 4.Seconds(), 60);
+                var s2 = new Measurement("Time mistake = RTT - 4s", ra, ra, m2.ArrivalTime + 4.Seconds(), m2.ArrivalTime + 4.Seconds(), 140);
+
+                return new GraphMessages(graph, new[] { m1, m2}, new[] { s1, s2});
+            });
+
+            return CreateNetworkAnimation(animation, state, life, 2, 2, 2);
         }
         public static Animation CreateTwoPlayerVaryingNetworkAnimation(Lifetime life) {
             var animation = new Animation();
@@ -139,22 +172,27 @@ namespace Animations {
                     new SolidColorBrush(Colors.Black),
                     3)), life);
                 // label
-                animation.Labels.Add(state.Select(e => new TextDesc(
-                    e.Graph.EndPoints[i].Name,
-                    new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i])),
-                    fontWeight: FontWeights.Bold,
-                    reference: new Point(1.1, 0.5))), life);
+                animation.Labels.Add(
+                    new TextDesc(
+                        text: state.Select(e => e.Graph.EndPoints[i].Name).Take(1),
+                        pos: state.Select(e => new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew), e.Graph.GetY(e.Graph.EndPoints[i]))).Take(1),
+                        fontWeight: FontWeights.Bold.ToSingletonObservable(),
+                        reference: new Point(1.1, 0.5).ToSingletonObservable()), 
+                    life);
                 // tick marks
                 foreach (var j in 10.Range()) {
                     animation.Lines.Add(state.Select(e => new LineSegmentDesc(
                         new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew + j.Seconds()), e.Graph.GetY(e.Graph.EndPoints[i]) - 5).Sweep(new Vector(0, 10)),
                         new SolidColorBrush(Colors.Black),
                         2)), life);
+
                     // labels
-                    animation.Labels.Add(state.Select(e => new TextDesc(
-                        j + "s",
-                        new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew + j.Seconds()), e.Graph.GetY(e.Graph.EndPoints[i]) - 5) + new Vector(0, -2),
-                        fontSize: 10)), life);
+                    animation.Labels.Add(
+                        new TextDesc(
+                            text: (j + "s").ToSingletonObservable(),
+                            pos: state.Select(e => new Point(e.Graph.GetX(e.Graph.EndPoints[i].Skew + j.Seconds()), e.Graph.GetY(e.Graph.EndPoints[i]) - 5) + new Vector(0, -2)),
+                            fontSize: 10.0.ToSingletonObservable()),
+                        life);
                 }
             }
 
@@ -185,14 +223,18 @@ namespace Animations {
                     true)), life);
                 var off1 = new Vector(5, -5);
                 var off2 = new Vector(5, 12);
-                animation.Labels.Add(px.Select(e => new TextDesc(
-                    e.m.Text,
-                    new Point(Math.Max(e.x1, e.x2), e.y) + off1.Rotate(e.m.Angle),
-                    direction: e.m.Angle)), life);
-                animation.Labels.Add(px.Select(e => new TextDesc(
-                    string.Format("{0:0.00}s", (e.m.X2 - e.m.X1).TotalSeconds),
-                    new Point(Math.Max(e.x1, e.x2), e.y) + off2.Rotate(e.m.Angle),
-                    direction: e.m.Angle)), life);
+                animation.Labels.Add(
+                    new TextDesc(
+                        text: px.Select(e => e.m.Text),
+                        pos: px.Select(e => new Point(Math.Max(e.x1, e.x2), e.y) + off1.Rotate(e.m.Angle)),
+                        direction: px.Select(e => e.m.Angle)), 
+                    life);
+                animation.Labels.Add(
+                    new TextDesc(
+                        text: px.Select(e => string.Format("{0:0.00}s", (e.m.X2 - e.m.X1).TotalSeconds)),
+                        pos: px.Select(e => new Point(Math.Max(e.x1, e.x2), e.y) + off2.Rotate(e.m.Angle)),
+                        direction: px.Select(e => e.m.Angle)), 
+                    life);
             }
 
             // messages
@@ -205,25 +247,31 @@ namespace Animations {
                     new SolidColorBrush(Colors.Black),
                     1)), life);
 
-                animation.Points.Add(px.Select(e => new PointDesc(
-                    e.m.PosEndPoint,
-                    Brushes.Transparent,
-                    Brushes.Black,
-                    3,
-                    0)), life);
-                animation.Points.Add(px.Select(e => new PointDesc(
-                    e.m.PosSourcePoint,
-                    Brushes.Transparent,
-                    Brushes.Black,
-                    3,
-                    0)), life);
+                animation.Points.Add(
+                    new PointDesc(
+                        px.Select(e => e.m.PosEndPoint),
+                        Brushes.Transparent.ToSingletonObservable(),
+                        Brushes.Black.ToSingletonObservable(),
+                        3.0.ToSingletonObservable(),
+                        0.0.ToSingletonObservable()), 
+                    life);
+                animation.Points.Add(
+                    new PointDesc(
+                        px.Select(e => e.m.PosSourcePoint),
+                        Brushes.Transparent.ToSingletonObservable(),
+                        Brushes.Black.ToSingletonObservable(),
+                        3.0.ToSingletonObservable(),
+                        0.0.ToSingletonObservable()), 
+                    life);
 
-                animation.Labels.Add(px.Select(e => new TextDesc(
-                    "-> " + e.m.Text + " ->",
-                    e.m.Pos.LerpAcross(0.1),
-                    fontSize: 10,
-                    direction: Dir.FromVector(e.m.Pos.Delta.X, e.m.Pos.Delta.Y),
-                    foreground: new SolidColorBrush(Colors.Gray))), life);
+                animation.Labels.Add(
+                    new TextDesc(
+                        text: px.Select(e => "-> " + e.m.Text + " ->"),
+                        pos: px.Select(e => e.m.Pos.LerpAcross(0.1)),
+                        fontSize: 10.0.ToSingletonObservable(),
+                        direction: px.Select(e => Dir.FromVector(e.m.Pos.Delta.X, e.m.Pos.Delta.Y)),
+                        foreground: Brushes.Gray.ToSingletonObservable()),
+                    life);
             }
 
             return animation;
