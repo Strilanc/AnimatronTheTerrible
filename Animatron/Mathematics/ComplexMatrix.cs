@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Strilanc.LinqToCollections;
-using SnipSnap.Mathematics;
+using Animatron;
 
+[DebuggerDisplay("{ToString()}")]
 public struct ComplexMatrix {
     private readonly IReadOnlyList<IReadOnlyList<Complex>> _columns;
     private ComplexMatrix(IReadOnlyList<IReadOnlyList<Complex>> columns) {
@@ -35,8 +37,15 @@ public struct ComplexMatrix {
         }
     }
     public static ComplexVector operator *(ComplexVector vector, ComplexMatrix matrix) {
-        return new ComplexVector(matrix.Columns
-            .Select(col => col.Zip(vector.Values, (e1, e2) => e1 * e2).Sum())
+        return new ComplexVector(
+            matrix.Rows
+            .Select(r => new ComplexVector(r) * vector)
             .ToArray());
+    }
+    public static ComplexMatrix operator *(ComplexMatrix left, ComplexMatrix right) {
+        return new ComplexMatrix(left.Columns.Select(c => (new ComplexVector(c) * right).Values).ToArray());
+    }
+    public override string ToString() {
+        return Rows.Select(r => r.Select(c => "| " + c.ToPrettyString().PadRight(6)).StringJoin("") + " |").StringJoin(Environment.NewLine);
     }
 }
