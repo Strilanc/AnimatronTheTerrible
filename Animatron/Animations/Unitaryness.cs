@@ -44,6 +44,13 @@ namespace Animations {
                     life);
             }
         }
+        private static IEnumerable<Vector> PhaseCurve(double phaseWidth, double r = 1, double startPhase = 0) {
+            if (phaseWidth < 0) phaseWidth += Math.PI*2;
+            yield return new Vector(0, 0);
+            for (var d = 0.0; d <= phaseWidth; d += 1/r) {
+                yield return r * new Vector(Math.Cos(d + startPhase), -Math.Sin(d + startPhase));
+            }
+        } 
         private static void ShowComplex(this Animation animation,
                                         IObservable<Brush> fill,
                                         IObservable<Brush> valueStroke,
@@ -51,39 +58,36 @@ namespace Animations {
                                         IObservable<Point> position,
                                         IObservable<double> unitRadius,
                                         Lifetime life,
-                                        IObservable<Brush> valueGuideStroke = null) {
-            // background unit circle
+                                        IObservable<Brush> valueGuideStroke = null,
+                                        IObservable<double> phaseOffset = null,
+                                        IObservable<double> phaseRadius = null) {
+            phaseOffset = phaseOffset ?? 0.0.ToSingletonObservable();
+            phaseRadius = phaseRadius ?? value.Select(e => Math.Max(0.05, e.Magnitude));
+            animation.Polygons.Add(
+                new PolygonDesc(
+                    phaseOffset.CombineLatest(value, position, unitRadius, phaseRadius, (o, v, p, r, f) => PhaseCurve(v.Phase, f * r, o).Select(e => e + p).ToArray()),
+                    fill: fill
+                    ),
+                life); 
+            // dashed unit circle
             animation.Points.Add(
                 new PointDesc(
                     pos: position,
-                    fill: fill,
-                    radius: unitRadius),
-                life);
-            // dashed magnitude circle
-            animation.Points.Add(
-                new PointDesc(
-                    pos: position,
-                    radius: unitRadius.CombineLatest(value, (r, c) => r*c.Magnitude),
+                    radius: unitRadius,
                     stroke: valueGuideStroke ?? valueStroke,
                     strokeThickness: 0.5.ToSingletonObservable(),
                     dashed: 4.0.ToSingletonObservable()),
                 life);
-            // dashed reference line along positive real axis
-            animation.Lines.Add(
-                new LineSegmentDesc(
-                    value.CombineLatest(position, unitRadius, (v, p, r) => new LineSegment(p, p + new Vector(r*v.Magnitude, 0))),
-                    dashed: 4.0.ToSingletonObservable(),
-                    stroke: valueGuideStroke ?? valueStroke,
-                    thickness: 0.5.ToSingletonObservable()), 
-                life);
             // current value arrow
             animation.ShowArrow(life,
                                 position,
-                                value.CombineLatest(unitRadius, (v, r) => r*new Vector(v.Real, -v.Imaginary)),
+                                value.CombineLatest(phaseOffset, (e, p) => e*Complex.Exp(Complex.ImaginaryOne*p))
+                                     .CombineLatest(unitRadius, (v, r) => r*new Vector(v.Real, -v.Imaginary)),
                                 stroke: valueStroke);
         }
         private static void ShowComplexProduct(this Animation animation,
-                                               IObservable<Brush> fill,
+                                               IObservable<SolidColorBrush> fill1,
+                                               IObservable<SolidColorBrush> fill2,
                                                IObservable<SolidColorBrush> valueStroke1,
                                                IObservable<SolidColorBrush> valueStroke2,
                                                IObservable<Complex> value1,
@@ -92,37 +96,26 @@ namespace Animations {
                                                IObservable<double> unitRadius,
                                                IObservable<double> time,
                                                Lifetime life) {
-            var x1 = time.CombineLatest(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
-                v1.Magnitude.Ln().LerpTo(v1.Magnitude.Ln() + v2.Magnitude.Ln(), t.SmoothTransition(0, 0, 1)).Exp(),
-                v1.Phase.LerpTo(v1.Phase + v2.Phase, t.SmoothTransition(0, 1, 1))));
-            var x2 = time.CombineLatest(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
-                v2.Magnitude.Ln().LerpTo(0, t.SmoothTransition(0, 0, 1)).Exp(),
-                v2.Phase.LerpTo(0, t.SmoothTransition(0, 1, 1))));
-            
-            animation.ShowComplex(fill, valueStroke1, x1, position, unitRadius, life);
-            animation.ShowComplex(Brushes.Transparent.ToSingletonObservable(),
-                                  valueStroke2.CombineLatest(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 0, 0, 1))),
-                                  x2,
+            animation.ShowComplex(fill1,
+                                  valueStroke1,
+                                  time.CombineLatest(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
+                                      v1.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0, 0, 0, 1)),
+                                      v1.Phase + 0.0.LerpTo(v2.Phase.ProperMod(Math.PI * 2), t.SmoothTransition(0, 0, 0, 1)))),
                                   position,
                                   unitRadius,
                                   life,
-                                  valueStroke2.CombineLatest(time, (s, t) => s.LerpToTransparent(t * 10)));
-
-            // original values
-            //animation.ShowComplex(Brushes.Transparent.ToSingletonObservable(),
-            //                      valueStroke1.Select(s => s.LerpToTransparent(0.8)),
-            //                      value1,
-            //                      position,
-            //                      unitRadius,
-            //                      life,
-            //                      Brushes.Transparent.ToSingletonObservable());
-            //animation.ShowComplex(Brushes.Transparent.ToSingletonObservable(),
-            //                      valueStroke2.Select(s => s.LerpToTransparent(0.8)),
-            //                      value2,
-            //                      position,
-            //                      unitRadius,
-            //                      life,
-            //                      Brushes.Transparent.ToSingletonObservable());
+                                  phaseOffset: time.CombineLatest(value2, (t, v) => t.SmoothTransition(0, 1, 1, 0)*v.Phase.ProperMod(Math.PI * 2)),
+                                  phaseRadius: value1.CombineLatest(value2, time, (v1, v2, t) => v1.Magnitude.LerpTo(v2.Magnitude, 0.5).LerpTo(v1.Magnitude*v2.Magnitude, t.SmoothTransition(0,0,0,1))));
+            animation.ShowComplex(fill2.CombineLatest(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 0, 0, 1))),
+                                  valueStroke2.CombineLatest(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 0, 0, 1))),
+                                  time.CombineLatest(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
+                                      v2.Magnitude.LerpTo(0, t.SmoothTransition(0, 0, 0, 1)),
+                                      v2.Phase.ProperMod(Math.PI * 2).LerpTo(0, t.SmoothTransition(0, 0, 0, 1)))),
+                                  position,
+                                  unitRadius,
+                                  life,
+                                  Brushes.Transparent.ToSingletonObservable(),
+                                  phaseRadius: value1.CombineLatest(value2, (v1, v2) => v1.Magnitude.LerpTo(v2.Magnitude, 0.5) * 0.75));
         }
         private static void ShowComplexSum(this Animation animation,
                                            IObservable<SolidColorBrush> fill,
@@ -136,13 +129,6 @@ namespace Animations {
 
             var sum = Complex.Zero.ToSingletonObservable();
             var target = position.CombineLatest(positionDelta, (p, d) => p + d*(values.Count-1)/2.0);
-            animation.ShowComplex(fill.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 0, 0, 0))),
-                                  Brushes.Transparent.ToSingletonObservable(),
-                                  Complex.Zero.ToSingletonObservable(),
-                                  target,
-                                  unitRadius,
-                                  life,
-                                  Brushes.Transparent.ToSingletonObservable());
             foreach (var i in values.Count.Range()) {
                 animation.ShowComplex(fill.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 0, 1, 1, 1))),
                                       valueStroke.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 0.1, 0.1, 1, 1))),
@@ -153,13 +139,13 @@ namespace Animations {
                                       valueStroke.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 1, 1, 1, 1))));
                 sum = sum.CombineLatest(values[i], (s, v) => s + v).Cache(life);
             }
-            animation.ShowComplex(Brushes.Transparent.ToSingletonObservable(),
+            animation.ShowComplex(fill.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 1, 0, 0))),
                                   valueStroke.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 1, 0, 0))),
                                   sum,
                                   target,
                                   unitRadius,
                                   life,
-                                  valueStroke.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 1, 1, 0))));
+                                  valueStroke.CombineLatest(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 0, 0, 0))));
         }
         public static Animation Animate(Lifetime life) {
             var animation = new Animation();
@@ -174,32 +160,45 @@ namespace Animations {
                 0, i * s, s, s + i,
                 0, i * s, s, s + i);
             Func<Complex> cc = () => new Complex(rr.NextDouble() - 0.5, rr.NextDouble() - 0.5)*Math.Sqrt(2);
-            u = ComplexMatrix.FromCellData(64.Range().Select(_ => cc()).ToArray());
-            v = new ComplexVector(8.Range().Select(_ => cc()).ToArray());
+            u = ComplexMatrix.FromCellData(16.Range().Select(_ => cc()).ToArray());
+            v = new ComplexVector(4.Range().Select(_ => cc()).ToArray());
 
-            var tt = animation.NextElapsedTime().Select(e => e.Times(2));
-            var t1 = tt.Select(e => e.TotalSeconds.LerpCycle(0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-            var x1 = tt.Select(e => e.TotalSeconds.LerpCycle(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
-            var t2 = tt.Select(e => e.TotalSeconds.LerpCycle(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.0));
-            var x2 = tt.Select(e => e.TotalSeconds.LerpCycle(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0));
+            foreach (var c in v.Values.Count.Range()) {
+                var tt = animation.NextElapsedTime().Select(e => e.Times(3));
+                var t1 = tt.Select(e => e.TotalSeconds.LerpCycle(0,0.33, 0.66, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+                var x1 = tt.Select(e => e.TotalSeconds.LerpCycle(1,0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1));
+                animation.ShowComplex(x1.Select(t => Brushes.Blue.LerpToTransparent(0.7).LerpToTransparent(t)),
+                                      x1.Select(t => Brushes.Black.LerpToTransparent(0.7).LerpToTransparent(t)),
+                                      v.Values[c].ToSingletonObservable(),
+                                      t1.Select(e => new Point(50 + c*100, 50 + (u.Rows.Count+1)*100*e)),
+                                      50.0.ToSingletonObservable(),
+                                      life);
+            }
             foreach (var r in u.Rows.Count.Range()) {
+                var tt = animation.NextElapsedTime().Select(e => e.Times(3)-(r*0.5).Seconds());
+                var t1 = tt.Select(e => e.TotalSeconds.LerpCycle(0,0.0, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                var x1 = tt.Select(e => e.TotalSeconds.LerpCycle(1,1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                var x1b = tt.Select(e => e.TotalSeconds.LerpCycle(0,0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                var t2 = tt.Select(e => e.TotalSeconds.LerpCycle(0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.0));
+                var x2 = tt.Select(e => e.TotalSeconds.LerpCycle(0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0));
                 foreach (var c in u.Columns.Count.Range()) {
-                    animation.ShowComplexProduct(x1.Select(t => Brushes.Orange.LerpToTransparent(1 - t)),
+                    animation.ShowComplexProduct(x1.Select(t => Brushes.Orange.LerpToTransparent(0.5).LerpToTransparent(1 - t)),
+                                                 x1b.Select(t => Brushes.Blue.LerpToTransparent(0.7).LerpToTransparent(1 - t)),
                                                  x1.Select(t => Brushes.Black.LerpToTransparent(1 - t)),
-                                                 x1.Select(t => Brushes.Red.LerpToTransparent(1 - t)),
+                                                 x1b.Select(t => Brushes.Black.LerpToTransparent(1 - t)),
                                                  u.Rows[r][c].ToSingletonObservable(),
                                                  v.Values[c].ToSingletonObservable(),
-                                                 new Point(50 + c*50, 50 + r*50).ToSingletonObservable(),
-                                                 20.0.ToSingletonObservable(),
+                                                 new Point(50 + c*100, 150 + r*100).ToSingletonObservable(),
+                                                 50.0.ToSingletonObservable(),
                                                  t1,
                                                  life);
                 }
-                animation.ShowComplexSum(x2.Select(t => Brushes.Orange.LerpToTransparent(1-t)),
+                animation.ShowComplexSum(x2.Select(t => Brushes.Orange.LerpToTransparent(0.5).LerpToTransparent(1 - t)),
                                          x2.Select(t => Brushes.Black.LerpToTransparent(1 - t)),
-                                         u.Rows[r].Zip(v.Values, (v1, v2) => v1*v2).Select(e => e.ToSingletonObservable()),
-                                         new Point(50, 50 + r * 50).ToSingletonObservable(),
-                                         new Vector(50, 0).ToSingletonObservable(), 
-                                         20.0.ToSingletonObservable(),
+                                         u.Rows[r].Zip(v.Values, (v1, v2) => v1 * v2).Select(e => e.ToSingletonObservable()),
+                                         new Point(50, 150 + r * 100).ToSingletonObservable(),
+                                         new Vector(100, 0).ToSingletonObservable(),
+                                         50.0.ToSingletonObservable(),
                                          t2,
                                          life);
             }
