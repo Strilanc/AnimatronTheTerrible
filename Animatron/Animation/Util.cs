@@ -46,6 +46,9 @@ namespace Animatron {
             var s = p / Math.Sqrt(Math.Sqrt(Math.Sqrt(1 + Math.Pow(p, 8))));
             return from.LerpTo(to, (s + 1) / 2);
         }
+        public static Point SmoothLerpTo(this Point from, Point to, double p) {
+            return new Point(from.X.SmoothLerpTo(to.X, p), from.Y.SmoothLerpTo(to.Y, p));
+        }
         public static double LerpCycle(this double t, params double[] stops) {
             var i = (int)Math.Floor(t).ProperMod(stops.Length);
             var i2 = (i + 1) % stops.Length;
@@ -56,7 +59,15 @@ namespace Animatron {
             var i2 = (i + 1) % stops.Length;
             return stops[i].SmoothLerpTo(stops[i2], t.ProperMod(1));
         }
+        public static Point SmoothCycle(this double t, params Point[] stops) {
+            var i = (int)Math.Floor(t).ProperMod(stops.Length);
+            var i2 = (i + 1) % stops.Length;
+            return stops[i].SmoothLerpTo(stops[i2], t.ProperMod(1));
+        }
         public static double SmoothTransition(this double t, params double[] stops) {
+            return (t * (stops.Length - 1)).SmoothCycle(stops);
+        }
+        public static Point SmoothTransition(this double t, params Point[] stops) {
             return (t * (stops.Length - 1)).SmoothCycle(stops);
         }
         public static double LerpTransition(this double t, params double[] stops) {

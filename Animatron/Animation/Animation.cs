@@ -15,6 +15,7 @@ namespace Animatron {
         public readonly PerishableCollection<Action<Step>> StepActions = new PerishableCollection<Action<Step>>(); 
         public readonly PerishableCollection<UIElement> Controls = new PerishableCollection<UIElement>();
         public readonly PerishableCollection<PointDesc> Points = new PerishableCollection<PointDesc>();
+        public readonly PerishableCollection<RectDesc> Rects = new PerishableCollection<RectDesc>();
         public readonly PerishableCollection<PolygonDesc> Polygons = new PerishableCollection<PolygonDesc>();
         public readonly PerishableCollection<LineSegmentDesc> Lines = new PerishableCollection<LineSegmentDesc>();
         public readonly PerishableCollection<TextDesc> Labels = new PerishableCollection<TextDesc>();
@@ -40,6 +41,11 @@ namespace Animatron {
         public Animation() {
             Points.CurrentAndFutureItems().Subscribe(e => {
                 var r = new Ellipse();
+                e.Value.Link(r, e.Lifetime);
+                Controls.Add(r, e.Lifetime);
+            });
+            Rects.CurrentAndFutureItems().Subscribe(e => {
+                var r = new Rectangle();
                 e.Value.Link(r, e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });

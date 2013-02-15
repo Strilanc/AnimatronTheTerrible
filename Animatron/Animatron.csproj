@@ -85,6 +85,7 @@
     <Compile Include="Animations\NetworkSequenceDiagram.cs" />
     <Compile Include="Animations\MovingCircleIntersectsLine.cs" />
     <Compile Include="Animation\Util.cs" />
+    <Compile Include="Controls\RectDesc.cs" />
     <Compile Include="Controls\PolygonDesc.cs" />
     <Compile Include="Mathematics\ComplexMatrix.cs" />
     <Compile Include="Mathematics\ComplexVector.cs" />
