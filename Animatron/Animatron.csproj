@@ -51,6 +51,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.0.21114\lib\Net45\System.Reactive.Core.dll</HintPath>
     </Reference>
@@ -80,9 +81,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Animations\Unitaryness.cs" />
     <Compile Include="Animations\NetworkSequenceDiagram.cs" />
     <Compile Include="Animations\MovingCircleIntersectsLine.cs" />
     <Compile Include="Animation\Util.cs" />
+    <Compile Include="Mathematics\ComplexMatrix.cs" />
+    <Compile Include="Mathematics\ComplexVector.cs" />
     <Compile Include="Util\TimeUtil.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

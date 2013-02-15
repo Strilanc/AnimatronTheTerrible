@@ -18,6 +18,9 @@ namespace Animatron {
         public readonly PerishableCollection<LineSegmentDesc> Lines = new PerishableCollection<LineSegmentDesc>();
         public readonly PerishableCollection<TextDesc> Labels = new PerishableCollection<TextDesc>();
 
+        public IObservable<TimeSpan> NextElapsedTime() {
+            return Dynamic(step => step.NextTotalElapsedTime);
+        }
         public IObservable<T> Dynamic<T>(Func<Step, T> stepper) {
             return new AnonymousObservable<T>(observer => {
                 var life = new DisposableLifetime();

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using Strilanc.LinqToCollections;
@@ -24,12 +26,25 @@ namespace SnipSnap.Mathematics {
             if (max.CompareTo(min) < 0) throw new ArgumentOutOfRangeException("max", "max < min");
             return value.Max(min).Min(max);
         }
+        public static double Ln(this double d) {
+            if (d < 0.01) return -100;
+            return Math.Log(d);
+        }
+        public static double Exp(this double d) {
+            return Math.Exp(d);
+        }
+        public static Point LerpTo(this Point from, Point to, double p) {
+            return new Point(from.X.LerpTo(to.X, p), from.Y.LerpTo(to.Y, p));
+        }
         ///<summary>Whether a value is less than (-1), contained in (0), or greater than (1) a contiguous range defined by a minimum and a maximum.</summary>
         public static int RangeSign<T>(this T value, T min, T max) where T : IComparable<T> {
             if (max.CompareTo(min) < 0) throw new ArgumentOutOfRangeException("max", "max < min");
             if (value.CompareTo(min) < 0) return -1;
             if (value.CompareTo(max) > 0) return +1;
             return 0;
+        }
+        public static Complex Sum(this IEnumerable<Complex> values) {
+            return values.Aggregate(Complex.Zero, (a, e) => a + e);
         }
 
         ///<summary>The smallest possible non-negative remainder from whole-dividing a value by a divisor.</summary>

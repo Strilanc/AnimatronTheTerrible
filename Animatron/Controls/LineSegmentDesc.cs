@@ -10,13 +10,13 @@ public sealed class LineSegmentDesc {
     public readonly IObservable<LineSegment> Pos;
     public readonly IObservable<Brush> Stroke;
     public readonly IObservable<double> Thickness;
-    public readonly IObservable<bool> Dashed;
-    public LineSegmentDesc(IObservable<LineSegment> pos, IObservable<Brush> stroke = null, IObservable<double> thickness = null, IObservable<bool> dashed = null) {
+    public readonly IObservable<double> Dashed;
+    public LineSegmentDesc(IObservable<LineSegment> pos, IObservable<Brush> stroke = null, IObservable<double> thickness = null, IObservable<double> dashed = null) {
         if (pos == null) throw new ArgumentNullException("pos");
         this.Pos = pos;
         this.Stroke = stroke ?? Brushes.Black.ToSingletonObservable();
         this.Thickness = thickness ?? 1.0.ToSingletonObservable();
-        this.Dashed = dashed ?? false.ToSingletonObservable();
+        this.Dashed = dashed ?? 0.0.ToSingletonObservable();
     }
     public void Link(Line line, Lifetime life) {
         Pos.Select(e => e.Start.X).DistinctUntilChanged().Subscribe(e => line.X1 = e, life);
@@ -28,7 +28,7 @@ public sealed class LineSegmentDesc {
         Dashed.DistinctUntilChanged().Subscribe(
             e => {
                 line.StrokeDashArray.Clear();
-                if (e) line.StrokeDashArray.Add(1.0);
+                if (e != 0) line.StrokeDashArray.Add(e);
             },
             life);
     }

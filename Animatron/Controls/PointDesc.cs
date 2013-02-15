@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using TwistedOak.Util;
 using System.Reactive.Linq;
+using Animatron;
 
 public sealed class PointDesc {
     public readonly IObservable<Point> Pos;
@@ -12,17 +13,15 @@ public sealed class PointDesc {
     public readonly IObservable<Brush> Fill;
     public readonly IObservable<double> Radius;
     public readonly IObservable<double> StrokeThickness;
-    public PointDesc(IObservable<Point> pos, IObservable<Brush> stroke, IObservable<Brush> fill, IObservable<double> radius, IObservable<double> strokeThickness) {
+    public readonly IObservable<double> Dashed;
+    public PointDesc(IObservable<Point> pos, IObservable<Brush> stroke = null, IObservable<Brush> fill = null, IObservable<double> radius = null, IObservable<double> strokeThickness = null, IObservable<double> dashed = null) {
         if (pos == null) throw new ArgumentNullException("pos");
-        if (stroke == null) throw new ArgumentNullException("stroke");
-        if (fill == null) throw new ArgumentNullException("fill");
-        if (radius == null) throw new ArgumentNullException("radius");
-        if (strokeThickness == null) throw new ArgumentNullException("strokeThickness");
         this.Pos = pos;
-        this.Stroke = stroke;
-        this.Fill = fill;
-        this.Radius = radius;
-        this.StrokeThickness = strokeThickness;
+        this.Stroke = stroke ?? Brushes.Transparent.ToSingletonObservable();
+        this.Fill = fill ?? Brushes.Transparent.ToSingletonObservable();
+        this.Radius = radius ?? 1.0.ToSingletonObservable();
+        this.StrokeThickness = strokeThickness ?? 0.0.ToSingletonObservable();
+        this.Dashed = dashed ?? 0.0.ToSingletonObservable();
     }
     public void Link(Ellipse ellipse, Lifetime life) {
         var topLeft = Pos.CombineLatest(Radius, (p, r) => p - new Vector(r, r));
@@ -35,5 +34,11 @@ public sealed class PointDesc {
         Fill.DistinctUntilChanged().Subscribe(e => ellipse.Fill = e, life);
         Stroke.DistinctUntilChanged().Subscribe(e => ellipse.Stroke = e, life);
         StrokeThickness.DistinctUntilChanged().Subscribe(e => ellipse.StrokeThickness = e, life);
+        Dashed.DistinctUntilChanged().Subscribe(
+            e => {
+                ellipse.StrokeDashArray.Clear();
+                if (e != 0) ellipse.StrokeDashArray.Add(e);
+            },
+            life);
     }
 }

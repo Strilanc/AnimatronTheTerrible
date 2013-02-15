@@ -12,7 +12,7 @@ namespace Animatron {
     public partial class MainWindow {
         public MainWindow() {
             var life = Lifetime.Immortal;
-            var animation = Animations.NetworkSequenceDiagram.CreateWobblyThreePlayerNetworkAnimation(life);
+            var animation = Animations.Unitaryness.Animate(life);
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();

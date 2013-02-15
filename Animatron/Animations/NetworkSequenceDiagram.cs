@@ -244,19 +244,19 @@ namespace Animations {
                         px.Select(e => new LineSegment(new Point(e.x1, e.y), new Point(e.x2, e.y))),
                         Brushes.Black.ToSingletonObservable(),
                         2.0.ToSingletonObservable(),
-                        true.ToSingletonObservable()),
+                        1.0.ToSingletonObservable()),
                     v.Lifetime);
                 animation.Lines.Add(
                     new LineSegmentDesc(
                         px.Select(e => new LineSegment(new Point(e.x1, e.y1), new Point(e.x1, e.y))),
                         Brushes.Red.ToSingletonObservable(),
-                        dashed: true.ToSingletonObservable()),
+                        dashed: 1.0.ToSingletonObservable()),
                     v.Lifetime);
                 animation.Lines.Add(
                     new LineSegmentDesc(
                         px.Select(e => new LineSegment(new Point(e.x2, e.y2), new Point(e.x2, e.y))),
                         Brushes.Red.ToSingletonObservable(),
-                        dashed: true.ToSingletonObservable()),
+                        dashed: 1.0.ToSingletonObservable()),
                     v.Lifetime);
                 var off1 = new Vector(5, -5);
                 var off2 = new Vector(5, 12);
