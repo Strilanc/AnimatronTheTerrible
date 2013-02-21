@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,11 +18,6 @@ namespace Animatron {
         public readonly PerishableCollection<UIElement> Controls = new PerishableCollection<UIElement>();
         public readonly PerishableCollection<IControlDescription> Things = new PerishableCollection<IControlDescription>();
 
-        public void AddSubAnimation(Animation animation, Lifetime life) {
-            animation.StepActions.CurrentAndFutureItems().Subscribe(e => StepActions.Add(e.Value, e.Lifetime.Min(life)));
-            animation.Controls.CurrentAndFutureItems().Subscribe(e => Controls.Add(e.Value, e.Lifetime.Min(life)));
-            animation.Things.CurrentAndFutureItems().Subscribe(e => Things.Add(e.Value, e.Lifetime.Min(life)));
-        }
         public void LinkMany(IAni<IEnumerable<IControlDescription>> values, Lifetime life) {
             LinkMany(values, Things, life);
         }

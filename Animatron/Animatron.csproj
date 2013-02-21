@@ -85,6 +85,7 @@
     <Compile Include="Animations\NetworkSequenceDiagram.cs" />
     <Compile Include="Animations\MovingCircleIntersectsLine.cs" />
     <Compile Include="Animation\Ani.cs" />
+    <Compile Include="Animation\Timeline.cs" />
     <Compile Include="Animation\Util.cs" />
     <Compile Include="Controls\IControlDescription.cs" />
     <Compile Include="Controls\RectDesc.cs" />

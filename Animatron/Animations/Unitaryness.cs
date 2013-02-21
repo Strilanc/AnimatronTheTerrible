@@ -196,61 +196,35 @@ namespace Animations {
                 }
             }, life);
         }
-        public static void ShowMatrix(this Animation animation,
-                                      Rect pos,
+        public static Animation ShowMatrix(Rect pos,
                                       ComplexMatrix u,
                                       Ani<Brush> or,
-                                      Ani<Brush> bla,
-                                      Lifetime life) {
+                                      Ani<Brush> bla) {
             var d = Math.Min(pos.Width / (u.Columns.Count + 2), pos.Height / (u.Rows.Count + 2)) / 2;
             var ur = d;
-            animation.Things.Add(
-                new RectDesc(new Rect(pos.X + d * 2, pos.Y + d * 2, pos.Width - d * 4, pos.Height - d * 4),
+            return new Animation {
+                new RectDesc(new Rect(pos.X + d*2, pos.Y + d*2, pos.Width - d*4, pos.Height - d*4),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
-                life);
-            animation.Things.Add(
-                new RectDesc(new Rect(pos.X, pos.Y + d * 2, d * 2, pos.Height - d * 4),
+                new RectDesc(new Rect(pos.X, pos.Y + d*2, d*2, pos.Height - d*4),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
-                life);
-            animation.Things.Add(
-                new RectDesc(new Rect(pos.Right - d * 2, pos.Y + d * 2, d * 2, pos.Height - d * 4),
+                new RectDesc(new Rect(pos.Right - d*2, pos.Y + d*2, d*2, pos.Height - d*4),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
-                life);
-                foreach (var r in u.Rows.Count.Range()) {
-                    foreach (var c in u.Columns.Count.Range()) {
-                        // matrix
-                        animation.Things.Add(ShowComplex(or,
-                                                         bla,
-                                                         u.Rows[r][c],
-                                                         (pos.TopLeft + new Vector(d*3 + c*d*2, d*3 + r*d*2)),
-                                                         ur),
-                                             life);
-                    }
-                }
-
-            // move solution back to left side
-            //animation.HideShow(
-            //    time,
-            //    0.9,
-            //    0.1,
-            //    (li, pp) => {
-            //        foreach (var r in u.Rows.Count.Range()) {
-            //            // solution
-            //            animation.ShowComplex(blu,
-            //                                  bla,
-            //                                  u.Rows[r].Count.Range().Select(e => u.Rows[r][e]*v.Values[e]).Sum(),
-            //                                  pp.Select(p => (pos.TopLeft + new Vector(d*3 + u.Columns.Count*d*2, d*3 + r*d*2)).LerpTo(pos.TopLeft + new Vector(d, d*3+r*d*2), p.SmoothTransition(0,1,1))),
-            //                                  ur,
-            //                                  li);
-            //        }
-            //    },
-            //    life);
+                // matrix
+                u.Rows.Count.Range().SelectMany(
+                    r => u.Columns.Count.Range().Select(
+                        c => ShowComplex(
+                            or,
+                            bla,
+                            u.Rows[r][c],
+                            (pos.TopLeft + new Vector(d*3 + c*d*2, d*3 + r*d*2)),
+                            ur)))
+            };
         }
         public static void ShowMatrixMultiplication(this Animation animation,
                                                     Ani<double> time,
@@ -430,61 +404,49 @@ namespace Animations {
                     life);
             }
 
-            animation.HideShow(
-                10.Seconds(),
-                0.Seconds(),
-                t1,
-                (li, tt) => {
-                    foreach (var j in v0.Values.Count.Range()) {
-                        animation.Things.Add(
-                            ShowComplex(
-                                Brushes.Blue.LerpToTransparent(0.7),
-                                Brushes.Black,
-                                v0.Values[j],
-                                sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w*3) + new Vector(0, j*w*2)),
-                                w),
-                            li);
-                    }
-                },
-                life);
-            animation.HideShow(
-                10.Seconds(),
-                0.Seconds(),
-                t1,
-                (li, tt) => animation.ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                                                 H1,
-                                                 Brushes.Orange.LerpToTransparent(0.5),
-                                                 Brushes.Black,
-                                                 li),
-                life);
+            var rx = Timeline.Periodic(10.Seconds());
+            animation.Things.Add(rx, life);
+            var ry = Timeline.Limited(0.Seconds(), t1);
+            ry.Add(v0.Values.Count.Range().Select(
+                j => ShowComplex(
+                    Brushes.Blue.LerpToTransparent(0.7),
+                    Brushes.Black,
+                    v0.Values[j],
+                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w*3) + new Vector(0, j*w*2)),
+                    w)));
+            rx.Add(ry);
+            ry.Add(ShowMatrix(new Rect(x1 - m2, 100, m2*2, m2*2),
+                              H1,
+                              Brushes.Orange.LerpToTransparent(0.5),
+                              Brushes.Black));
             animation.HideShow(
                 10.Seconds(),
                 t2,
                 10.Seconds()-t2,
-                (li, tt) => animation.ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
+                (li, tt) => animation.Things.Add(ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
                                                  H1,
                                                  Brushes.Orange.LerpToTransparent(0.5),
-                                                 Brushes.Black,
+                                                 Brushes.Black),
                                                  li),
                 life);
             animation.HideShow(
                 10.Seconds(),
                 0.Seconds(),
                 t3,
-                (li, tt) => animation.ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
+                (li, tt) => animation.Things.Add(ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
                                                  H1,
                                                  Brushes.Orange.LerpToTransparent(0.5),
-                                                 Brushes.Black,
+                                                 Brushes.Black),
                                                  li),
                 life);
             animation.HideShow(
                 10.Seconds(),
                 t4,
                 10.Seconds()-t4,
-                (li, tt) => animation.ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
+                (li, tt) => animation.Things.Add(ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
                                                  H1,
                                                  Brushes.Orange.LerpToTransparent(0.5),
-                                                 Brushes.Black,
+                                                 Brushes.Black),
                                                  li),
                 life);
             animation.HideShow(
