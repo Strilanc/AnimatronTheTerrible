@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Animatron;
@@ -12,8 +11,8 @@ namespace Animations {
         public static Animation Animate(Lifetime life) {
             var animation = new Animation();
 
-            var state = animation.Dynamic(step => {
-                var t = step.NextTotalElapsedTime.TotalSeconds;
+            var state = Ani.Anon(dt => {
+                var t = dt.TotalSeconds;
                 var x = Math.Cos(t)*100 + 150;
                 var y = Math.Sin(t)*100 + 150;
                 var vx = Math.Cos(3*t);
@@ -32,21 +31,21 @@ namespace Animations {
             animation.Points.Add(
                 new PointDesc(
                     state.Select(e => e.c),
-                    Brushes.Black.ToSingletonObservable(),
-                    Brushes.Gray.ToSingletonObservable(),
+                    Brushes.Black,
+                    Brushes.Gray,
                     state.Select(e => (double)e.r),
-                    1.0.ToSingletonObservable()),
+                    1.0),
                 life);
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v*1000)), Brushes.Red.ToSingletonObservable()), life);
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) + e.v.Perp() * e.r), Brushes.LightGray.ToSingletonObservable()), life);
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) - e.v.Perp() * e.r), Brushes.LightGray.ToSingletonObservable()), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v*1000)), Brushes.Red), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) + e.v.Perp() * e.r), Brushes.LightGray), life);
+            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) - e.v.Perp() * e.r), Brushes.LightGray), life);
             animation.Points.Add(
                 new PointDesc(
                     state.Select(e => (e.c + e.v * e.h) ?? new Point(-10000, -10000)), 
-                    Brushes.Gray.ToSingletonObservable(), 
-                    Brushes.LightGray.ToSingletonObservable(), 
+                    Brushes.Gray, 
+                    Brushes.LightGray, 
                     state.Select(e => (double)e.r), 
-                    1.0.ToSingletonObservable()), 
+                    1.0), 
                 life);
 
             return animation;

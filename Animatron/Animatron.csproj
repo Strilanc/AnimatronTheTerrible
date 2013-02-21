@@ -84,6 +84,7 @@
     <Compile Include="Animations\Unitaryness.cs" />
     <Compile Include="Animations\NetworkSequenceDiagram.cs" />
     <Compile Include="Animations\MovingCircleIntersectsLine.cs" />
+    <Compile Include="Animation\Ani.cs" />
     <Compile Include="Animation\Util.cs" />
     <Compile Include="Controls\RectDesc.cs" />
     <Compile Include="Controls\PolygonDesc.cs" />

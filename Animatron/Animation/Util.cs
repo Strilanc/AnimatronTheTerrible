@@ -106,6 +106,18 @@ namespace Animatron {
             if (p >= 1) return finish;
             return new SolidColorBrush(start.Color.LerpTo(finish.Color, p));
         }
+        public static Brush LerpToTransparent(this Brush start, double p) {
+            var s = start as SolidColorBrush;
+            if (s == null) throw new ArgumentException();
+            return s.LerpToTransparent(p);
+        }
+        public static Brush LerpTo(this Brush start, Brush finish, double p) {
+            var s = start as SolidColorBrush;
+            var f = finish as SolidColorBrush;
+            if (s == null) throw new ArgumentException();
+            if (f == null) throw new ArgumentException();
+            return s.LerpTo(f, p);
+        }
         public static Color LerpToTransparent(this Color start, double p) {
             return Color.FromArgb(
                 start.A.LerpTo(0, p),

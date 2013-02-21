@@ -26,6 +26,9 @@ namespace SnipSnap.Mathematics {
             if (max.CompareTo(min) < 0) throw new ArgumentOutOfRangeException("max", "max < min");
             return value.Max(min).Min(max);
         }
+        public static IEnumerable<T> Concat<T>(this IEnumerable<IEnumerable<T>> r) {
+            return r.SelectMany(e => e);
+        }
         public static double Ln(this double d) {
             if (d < 0.01) return -100;
             return Math.Log(d);

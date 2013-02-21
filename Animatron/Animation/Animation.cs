@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,6 +11,7 @@ using SnipSnap.Mathematics;
 using TwistedOak.Collections;
 using TwistedOak.Element.Env;
 using TwistedOak.Util;
+using System.Linq;
 
 namespace Animatron {
     public sealed class Animation {
@@ -19,6 +22,40 @@ namespace Animatron {
         public readonly PerishableCollection<PolygonDesc> Polygons = new PerishableCollection<PolygonDesc>();
         public readonly PerishableCollection<LineSegmentDesc> Lines = new PerishableCollection<LineSegmentDesc>();
         public readonly PerishableCollection<TextDesc> Labels = new PerishableCollection<TextDesc>();
+
+        public void LinkMany(IAni<IEnumerable<PointDesc>> values, Lifetime life) {
+            LinkMany(values, Points, life);
+        }
+        public void LinkMany(IAni<IEnumerable<RectDesc>> values, Lifetime life) {
+            LinkMany(values, Rects, life);
+        }
+        public void LinkMany(IAni<IEnumerable<PolygonDesc>> values, Lifetime life) {
+            LinkMany(values, Polygons, life);
+        }
+        public void LinkMany(IAni<IEnumerable<LineSegmentDesc>> values, Lifetime life) {
+            LinkMany(values, Lines, life);
+        }
+        public void LinkMany(IAni<IEnumerable<TextDesc>> values, Lifetime life) {
+            LinkMany(values, Labels, life);
+        }
+        private void LinkMany<T>(IAni<IEnumerable<T>> values, PerishableCollection<T> col, Lifetime life) {
+            var d = new Dictionary<T, LifetimeSource>();
+            NextElapsedTime().Subscribe(
+                t => {
+                    var cur = values.ValueAt(t).Distinct();
+                    var stale = d.Keys.Except(cur);
+                    var fresh = cur.Except(d.Keys);
+                    foreach (var e in fresh) {
+                        d.Add(e, life.CreateDependentSource());
+                        col.Add(e, d[e].Lifetime);
+                    }
+                    foreach (var e in stale) {
+                        d[e].EndLifetime();
+                        d.Remove(e);
+                    }
+                },
+                life);
+        }
 
         public IObservable<TimeSpan> NextElapsedTime() {
             return Dynamic(step => step.NextTotalElapsedTime);
@@ -41,27 +78,27 @@ namespace Animatron {
         public Animation() {
             Points.CurrentAndFutureItems().Subscribe(e => {
                 var r = new Ellipse();
-                e.Value.Link(r, e.Lifetime);
+                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
             Rects.CurrentAndFutureItems().Subscribe(e => {
                 var r = new Rectangle();
-                e.Value.Link(r, e.Lifetime);
+                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
             Lines.CurrentAndFutureItems().Subscribe(e => {
                 var r = new Line();
-                e.Value.Link(r, e.Lifetime);
+                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
             Labels.CurrentAndFutureItems().Subscribe(e => {
                 var r = new TextBlock();
-                e.Value.Link(r, e.Lifetime);
+                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
             Polygons.CurrentAndFutureItems().Subscribe(e => {
                 var r = new Polygon();
-                e.Value.Link(r, e.Lifetime);
+                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
                 Controls.Add(r, e.Lifetime);
             });
         }

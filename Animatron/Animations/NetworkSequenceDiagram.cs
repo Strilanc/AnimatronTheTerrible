@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Windows;
 using System.Windows.Media;
 using Animatron;
 using SnipSnap.Mathematics;
 using Strilanc.Angle;
 using Strilanc.LinqToCollections;
-using TwistedOak.Collections;
 using TwistedOak.Element.Env;
 using TwistedOak.Util;
 using LineSegment = SnipSnap.Mathematics.LineSegment;
@@ -20,8 +16,8 @@ namespace Animations {
         public static Animation CreateCounterExample1(Lifetime life) {
             var animation = new Animation();
 
-            var state = animation.Dynamic(step => {
-                var t = (step.NextTotalElapsedTime.TotalSeconds * 8).SmoothCycle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            var state = Ani.Anon(step => {
+                var t = (step.TotalSeconds * 8).SmoothCycle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
                 var t1 = TimeSpan.Zero;
                 var t2 = t.Seconds();
@@ -56,8 +52,8 @@ namespace Animations {
         public static Animation CreateCounterExample2(Lifetime life) {
             var animation = new Animation();
 
-            var state = animation.Dynamic(step => {
-                var t = (step.NextTotalElapsedTime.TotalSeconds * 8).SmoothCycle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            var state = Ani.Anon(step => {
+                var t = (step.TotalSeconds * 8).SmoothCycle(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
                 var t1 = TimeSpan.Zero;
                 var t2 = t.Seconds();
@@ -86,8 +82,8 @@ namespace Animations {
         public static Animation CreateTwoPlayerVaryingNetworkAnimation(Lifetime life) {
             var animation = new Animation();
 
-            var state = animation.Dynamic(step => {
-                var t = step.NextTotalElapsedTime.TotalSeconds;
+            var state = Ani.Anon(step => {
+                var t = step.TotalSeconds;
 
                 var peerA = new EndPoint("Peer A", skew: 0.Seconds());
                 var peerB = new EndPoint("Peer B", skew: 0.Seconds());
@@ -114,10 +110,10 @@ namespace Animations {
         public static Animation CreateWobblyThreePlayerNetworkAnimation(Lifetime life) {
             var animation = new Animation();
 
-            var state = animation.Dynamic(step => {
-                var t1 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds).Seconds().DividedBy(3);
-                var t2 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds * 3).Seconds().DividedBy(3);
-                var t3 = Math.Sin(step.NextTotalElapsedTime.TotalSeconds * 2).Seconds().DividedBy(3);
+            var state = Ani.Anon(step => {
+                var t1 = Math.Sin(step.TotalSeconds).Seconds().DividedBy(3);
+                var t2 = Math.Sin(step.TotalSeconds * 3).Seconds().DividedBy(3);
+                var t3 = Math.Sin(step.TotalSeconds * 2).Seconds().DividedBy(3);
 
                 var client1 = new EndPoint("Client A", skew: 0.Seconds() + t1);
                 var server = new EndPoint("Server", skew: 0.Seconds() + t2);
@@ -163,151 +159,119 @@ namespace Animations {
 
             return CreateNetworkAnimation(animation, state, life);
         }
-        private static IObservable<Perishable<IObservable<T>>> ForList<T>(this IObservable<IEnumerable<T>> items) {
-            return new AnonymousObservable<Perishable<IObservable<T>>>(observer => {
-                var list = new List<Tuple<Subject<T>, LifetimeSource>>();
-                var d = new DisposableLifetime();
-                items.Subscribe(e => {
-                    var i = 0;
-                    foreach (var x in e) {
-                        if (list.Count == i) {
-                            var o = Tuple.Create(new Subject<T>(), d.Lifetime.CreateDependentSource());
-                            list.Add(o);
-                            observer.OnNext(new Perishable<IObservable<T>>(o.Item1, o.Item2.Lifetime));
-                        }
-                        list[i].Item1.OnNext(x);
-                        i += 1;
-                    }
-                    while (list.Count > i) {
-                        list[list.Count - 1].Item2.EndLifetime();
-                        list[list.Count - 1].Item1.OnCompleted();
-                        list.RemoveAt(list.Count - 1);
-                    }
-                }, d.Lifetime);
-                return d;
-            });
-        }
-        private static Animation CreateNetworkAnimation(Animation animation, IObservable<GraphMessages> stateD, Lifetime life) {
-            var state = stateD.Cache(life);
+        private static Animation CreateNetworkAnimation(Animation animation, Ani<GraphMessages> state, Lifetime life) {
+            // --- end points
+            // timeline
+            animation.LinkMany(
+                state.Select(s => s.Graph.EndPoints.Select(
+                    p => new LineSegmentDesc(
+                             new Point(s.Graph.GetX(p.Skew), s.Graph.GetY(p)).Sweep(new Vector(1000, 0)),
+                             Brushes.Black,
+                             3))),
+                life);
+            // timeline label
+            animation.LinkMany(
+                state.Select(s => s.Graph.EndPoints.Select(
+                    p => new TextDesc(
+                             text: p.Name,
+                             pos: new Point(s.Graph.GetX(p.Skew), s.Graph.GetY(p)),
+                             fontWeight: FontWeights.Bold,
+                             reference: new Point(1.1, 0.5)))),
+                life);
+            // tick marks
+            animation.LinkMany(
+                state.Select(s => s.Graph.EndPoints.SelectMany(
+                    p => 10.Range().Select(
+                        j => new LineSegmentDesc(
+                                 new Point(s.Graph.GetX(p.Skew + j.Seconds()), s.Graph.GetY(p) - 5).Sweep(new Vector(0, 10)),
+                                 Brushes.Black,
+                                 2)))),
+                life);
+            // tick labels
+            animation.LinkMany(
+                state.Select(s => s.Graph.EndPoints.SelectMany(
+                    p => 10.Range().Select(
+                        j => new TextDesc(
+                                 text: (j + "s"),
+                                 pos: new Point(s.Graph.GetX(p.Skew + j.Seconds()), s.Graph.GetY(p) - 5) + new Vector(0, -2),
+                                 fontSize: 10)))),
+                life);
 
-            // end points
-            state.Select(e => e.Graph.EndPoints.Select(f => new { s = e, m = f })).ForList().Subscribe(v => {
-                // timeline
-                animation.Lines.Add(
-                    new LineSegmentDesc(
-                        v.Value.Select(e => new Point(e.s.Graph.GetX(e.m.Skew), e.s.Graph.GetY(e.m)).Sweep(new Vector(1000, 0))),
-                        Brushes.Black.ToSingletonObservable(),
-                        3.0.ToSingletonObservable()),
-                    v.Lifetime);
-                
-                // label
-                animation.Labels.Add(
-                    new TextDesc(
-                        text: v.Value.Select(e => e.m.Name),
-                        pos: v.Value.Select(e => new Point(e.s.Graph.GetX(e.m.Skew), e.s.Graph.GetY(e.m))),
-                        fontWeight: FontWeights.Bold.ToSingletonObservable(),
-                        reference: new Point(1.1, 0.5).ToSingletonObservable()),
-                    v.Lifetime);
-                
-                // tick marks
-                foreach (var j in 10.Range()) {
-                    animation.Lines.Add(
-                        new LineSegmentDesc(
-                            v.Value.Select(e =>
-                                new Point(e.s.Graph.GetX(e.m.Skew + j.Seconds()), e.s.Graph.GetY(e.m) - 5).Sweep(new Vector(0, 10))),
-                            Brushes.Black.ToSingletonObservable(),
-                            2.0.ToSingletonObservable()),
-                        v.Lifetime);
-
-                    // labels
-                    animation.Labels.Add(
-                        new TextDesc(
-                            text: (j + "s").ToSingletonObservable(),
-                            pos: v.Value.Select(e => new Point(e.s.Graph.GetX(e.m.Skew + j.Seconds()), e.s.Graph.GetY(e.m) - 5) + new Vector(0, -2)),
-                            fontSize: 10.0.ToSingletonObservable()),
-                        v.Lifetime);
-                }
-            }, life);
-
-            // measurements
-            state.Select(e => e.Measurements.Select(f => new {s = e, m = f})).ForList().Subscribe(v => {
-                var px = (from s in v.Value
-                          let m = s.m
-                          let x1 = s.s.Graph.GetX(m.X1)
-                          let y1 = s.s.Graph.GetY(m.V1)
-                          let x2 = s.s.Graph.GetX(m.X2)
-                          let y2 = s.s.Graph.GetY(m.V2)
-                          let y = m.Y ?? ((y1 + y2)/2)
-                          select new {s, m, x1, y1, x2, y2, y}).Cache(life);
-                animation.Lines.Add(
-                    new LineSegmentDesc(
-                        px.Select(e => new LineSegment(new Point(e.x1, e.y), new Point(e.x2, e.y))),
-                        Brushes.Black.ToSingletonObservable(),
-                        2.0.ToSingletonObservable(),
-                        1.0.ToSingletonObservable()),
-                    v.Lifetime);
-                animation.Lines.Add(
-                    new LineSegmentDesc(
-                        px.Select(e => new LineSegment(new Point(e.x1, e.y1), new Point(e.x1, e.y))),
-                        Brushes.Red.ToSingletonObservable(),
-                        dashed: 1.0.ToSingletonObservable()),
-                    v.Lifetime);
-                animation.Lines.Add(
-                    new LineSegmentDesc(
-                        px.Select(e => new LineSegment(new Point(e.x2, e.y2), new Point(e.x2, e.y))),
-                        Brushes.Red.ToSingletonObservable(),
-                        dashed: 1.0.ToSingletonObservable()),
-                    v.Lifetime);
-                var off1 = new Vector(5, -5);
-                var off2 = new Vector(5, 12);
-                animation.Labels.Add(
-                    new TextDesc(
-                        text: px.Select(e => e.m.Text),
-                        pos: px.Select(e => new Point(Math.Max(e.x1, e.x2), e.y) + off1.Rotate(e.m.Angle)),
-                        direction: px.Select(e => e.m.Angle)),
-                    v.Lifetime);
-                animation.Labels.Add(
-                    new TextDesc(
-                        text: px.Select(e => string.Format("{0:0.00}s", (e.m.X2 - e.m.X1).TotalSeconds)),
-                        pos: px.Select(e => new Point(Math.Max(e.x1, e.x2), e.y) + off2.Rotate(e.m.Angle)),
-                        direction: px.Select(e => e.m.Angle)),
-                    v.Lifetime);
-            });
+            // --- measurements
+            var measurements =
+                from s in state
+                select from m in s.Measurements
+                       let x1 = s.Graph.GetX(m.X1)
+                       let y1 = s.Graph.GetY(m.V1)
+                       let x2 = s.Graph.GetX(m.X2)
+                       let y2 = s.Graph.GetY(m.V2)
+                       let y = m.Y ?? ((y1 + y2)/2)
+                       select new {s, m, x1, y1, x2, y2, y};
+            animation.LinkMany(
+                measurements.LiftSelect(
+                    e => new LineSegmentDesc(
+                             new LineSegment(new Point(e.x1, e.y), new Point(e.x2, e.y)),
+                             Brushes.Black,
+                             2,
+                             1)),
+                life);
+            animation.LinkMany(
+                measurements.LiftSelect(
+                    e => new LineSegmentDesc(
+                             new LineSegment(new Point(e.x1, e.y1), new Point(e.x1, e.y)),
+                             Brushes.Red,
+                             dashed: 1)),
+                    life);
+            animation.LinkMany(
+                measurements.LiftSelect(
+                    e => new LineSegmentDesc(
+                             new LineSegment(new Point(e.x2, e.y2), new Point(e.x2, e.y)),
+                             Brushes.Red,
+                             dashed: 1)),
+                    life);
+            var off1 = new Vector(5, -5);
+            var off2 = new Vector(5, 12);
+            animation.LinkMany(
+                measurements.LiftSelect(
+                    e => new TextDesc(
+                        text: e.m.Text,
+                        pos: new Point(Math.Max(e.x1, e.x2), e.y) + off1.Rotate(e.m.Angle),
+                        direction: e.m.Angle)),
+                    life);
+            animation.LinkMany(
+                measurements.LiftSelect(
+                    e => new TextDesc(
+                             text: string.Format("{0:0.00}s", (e.m.X2 - e.m.X1).TotalSeconds),
+                             pos: new Point(Math.Max(e.x1, e.x2), e.y) + off2.Rotate(e.m.Angle),
+                             direction: e.m.Angle)),
+                life);
 
             // messages
-            state.Select(e => e.Messages.Select(f => new {s = e, m = f})).ForList().Subscribe(v => {
-                animation.Lines.Add(
-                    new LineSegmentDesc(
-                        v.Value.Select(e => e.m.Pos),
-                        Brushes.Black.ToSingletonObservable()),
-                    v.Lifetime);
-
-                animation.Points.Add(
-                    new PointDesc(
-                        v.Value.Select(e => e.m.PosEndPoint),
-                        Brushes.Transparent.ToSingletonObservable(),
-                        Brushes.Black.ToSingletonObservable(),
-                        3.0.ToSingletonObservable(),
-                        0.0.ToSingletonObservable()),
-                    v.Lifetime);
-                animation.Points.Add(
-                    new PointDesc(
-                        v.Value.Select(e => e.m.PosSourcePoint),
-                        Brushes.Transparent.ToSingletonObservable(),
-                        Brushes.Black.ToSingletonObservable(),
-                        3.0.ToSingletonObservable(),
-                        0.0.ToSingletonObservable()),
-                    v.Lifetime);
-
-                animation.Labels.Add(
-                    new TextDesc(
-                        text: v.Value.Select(e => "-> " + e.m.Text + " ->"),
-                        pos: v.Value.Select(e => e.m.Pos.LerpAcross(0.1)),
-                        fontSize: 10.0.ToSingletonObservable(),
-                        direction: v.Value.Select(e => Dir.FromVector(e.m.Pos.Delta.X, e.m.Pos.Delta.Y)),
-                        foreground: Brushes.Gray.ToSingletonObservable()),
-                    v.Lifetime);
-            });
+            animation.LinkMany(
+                state.Select(e => e.Messages).LiftSelect(
+                    e => new LineSegmentDesc(
+                             e.Pos,
+                             Brushes.Black)),
+                life);
+            animation.LinkMany(
+                state.Select(e => e.Messages.SelectMany(
+                    m => new[] {m.PosSourcePoint, m.PosEndPoint}.Select(
+                        p => new PointDesc(
+                                 p,
+                                 Brushes.Transparent,
+                                 Brushes.Black,
+                                 3,
+                                 0)))),
+                life);
+            animation.LinkMany(
+                state.Select(e => e.Messages).LiftSelect(
+                    e => new TextDesc(
+                             text: "-> " + e.Text + " ->",
+                             pos: e.Pos.LerpAcross(0.1),
+                             fontSize: 10,
+                             direction: Dir.FromVector(e.Pos.Delta.X, e.Pos.Delta.Y),
+                             foreground: Brushes.Gray)),
+                life);
 
             return animation;
         }
