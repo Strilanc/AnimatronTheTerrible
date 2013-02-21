@@ -4,10 +4,12 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Strilanc.Angle;
+using TwistedOak.Collections;
 using TwistedOak.Util;
 using Animatron;
+using SnipSnap.Mathematics;
 
-public sealed class RectDesc {
+public sealed class RectDesc : IControlDescription<Rectangle> {
     public readonly Ani<Rect> Pos;
     public readonly Ani<Brush> Stroke;
     public readonly Ani<Brush> Fill;
@@ -41,11 +43,16 @@ public sealed class RectDesc {
         Fill.Watch(life, pulse, e => rectangle.Fill = e);
         Stroke.Watch(life, pulse, e => rectangle.Stroke = e);
         StrokeThickness.Watch(life, pulse, e => rectangle.StrokeThickness = e);
-        RotationOrigin.Watch(life, pulse, e => rectangle.RenderTransformOrigin = e);
+        RotationOrigin.Watch(life, pulse, e => rectangle.RenderTransformOrigin = new Point(e.X.Clamp(double.MinValue, double.MaxValue), e.Y.Clamp(double.MinValue, double.MaxValue)));
         Rotation.Watch(life, pulse, e => rectangle.RenderTransform = new RotateTransform(e.GetAngle(basis)));
         Dashed.Watch(life, pulse, e => {
             rectangle.StrokeDashArray.Clear();
             if (e != 0) rectangle.StrokeDashArray.Add(e);
         });
+    }
+    public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
+        var r = new Rectangle();
+        Link(r, pulse, life);
+        controls.Add(r, life);
     }
 }

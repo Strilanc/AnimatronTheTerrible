@@ -23,6 +23,20 @@ public struct ComplexMatrix {
         var cols = cells.Deinterleave(size);
         return FromColumns(cols);
     }
+    public static ComplexMatrix MakeHadamard(int power) {
+        if (power == 0) return FromCellData(1);
+        var h = MakeHadamard(power - 1);
+        return FromMatrixData(h, h, h, -h);
+    }
+    public static ComplexMatrix MakeUnitaryHadamard(int power) {
+        return MakeHadamard(power)*Math.Pow(0.5, 0.5*power);
+    }
+    public static ComplexMatrix FromMatrixData(params ComplexMatrix[] cells) {
+        var inSize = cells.First().Span;
+        var outSize = (int)Math.Sqrt(cells.Length);
+        var size = inSize * outSize;
+        return FromColumns(size.Range().Select(c => size.Range().Select(r => cells.Deinterleave(outSize)[c / inSize][r / inSize].Columns[c % inSize][r % inSize]).ToArray()).ToArray());
+    }
 
     public int Span { get { return _columns == null ? 0 : _columns.Count; } }
     public IReadOnlyList<IReadOnlyList<Complex>> Columns { get { return _columns ?? ReadOnlyList.Empty<IReadOnlyList<Complex>>(); } }
@@ -41,6 +55,18 @@ public struct ComplexMatrix {
             matrix.Rows
             .Select(r => new ComplexVector(r) * vector)
             .ToArray());
+    }
+    public static ComplexMatrix operator -(ComplexMatrix matrix) {
+        return matrix * -1;
+    }
+    public static ComplexMatrix operator *(ComplexMatrix matrix, Complex scale) {
+        return FromColumns(matrix.Columns.Select(e => e.Select(c => c * scale).ToArray()).ToArray());
+    }
+    public static ComplexMatrix operator *(Complex scale, ComplexMatrix matrix) {
+        return matrix*scale;
+    }
+    public static ComplexMatrix operator /(ComplexMatrix matrix, Complex scale) {
+        return FromColumns(matrix.Columns.Select(e => e.Select(c => c / scale).ToArray()).ToArray());
     }
     public static ComplexMatrix operator *(ComplexMatrix left, ComplexMatrix right) {
         return new ComplexMatrix(left.Columns.Select(c => (new ComplexVector(c) * right).Values).ToArray());

@@ -3,11 +3,13 @@ using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using Animatron;
 using Strilanc.Angle;
+using TwistedOak.Collections;
 using TwistedOak.Util;
 
-public sealed class TextDesc {
+public sealed class TextDesc : IControlDescription<TextBlock> {
     public readonly Ani<Brush> Foreground;
     public readonly Ani<Dir> Direction;
     public readonly Ani<Point> Pos;
@@ -53,5 +55,10 @@ public sealed class TextDesc {
         FontWeight.Watch(life, pulse, e => textBlock.FontWeight = e);
         FontSize.Watch(life, pulse, e => textBlock.FontSize = e);
         Foreground.Watch(life, pulse, e => textBlock.Foreground = e);
+    }
+    public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
+        var r = new TextBlock();
+        Link(r, pulse, life);
+        controls.Add(r, life);
     }
 }

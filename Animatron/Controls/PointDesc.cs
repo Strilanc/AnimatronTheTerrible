@@ -3,10 +3,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using TwistedOak.Collections;
 using TwistedOak.Util;
 using Animatron;
 
-public sealed class PointDesc {
+public sealed class PointDesc : IControlDescription<Ellipse> {
     public readonly Ani<Point> Pos;
     public readonly Ani<Brush> Stroke;
     public readonly Ani<Brush> Fill;
@@ -37,5 +38,10 @@ public sealed class PointDesc {
             ellipse.StrokeDashArray.Clear();
             if (e != 0) ellipse.StrokeDashArray.Add(e);
         });
+    }
+    public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
+        var r = new Ellipse();
+        Link(r, pulse, life);
+        controls.Add(r, life);
     }
 }

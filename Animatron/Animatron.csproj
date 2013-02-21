@@ -86,6 +86,7 @@
     <Compile Include="Animations\MovingCircleIntersectsLine.cs" />
     <Compile Include="Animation\Ani.cs" />
     <Compile Include="Animation\Util.cs" />
+    <Compile Include="Controls\IControlDescription.cs" />
     <Compile Include="Controls\RectDesc.cs" />
     <Compile Include="Controls\PolygonDesc.cs" />
     <Compile Include="Mathematics\ComplexMatrix.cs" />

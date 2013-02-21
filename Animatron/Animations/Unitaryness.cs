@@ -15,9 +15,7 @@ using TwistedOak.Element.Env;
 
 namespace Animations {
     public static class Unitaryness {
-        private static void ShowArrow(this Animation animation,
-                                      Lifetime life,
-                                      Ani<Point> start,
+        private static Animation Arrow(Ani<Point> start,
                                       Ani<Vector> delta,
                                       Ani<Brush> stroke = null,
                                       Ani<double> thickness = null,
@@ -25,29 +23,27 @@ namespace Animations {
                                       Ani<double> dashed = null) {
             wedgeLength = wedgeLength ?? 5;
             thickness = thickness ?? 1;
-            animation.Points.Add(
-                new PointDesc(start, fill: stroke, radius: thickness.Select(e => e * 1.25)),
-                life);
-            animation.Lines.Add(
+            return new Animation {
+                new PointDesc(start, fill: stroke, radius: thickness.Select(e => e*1.25)),
                 new LineSegmentDesc(
                     pos: start.Combine(delta, (p, d) => new LineSegment(p, d)),
                     stroke: stroke,
                     thickness: thickness,
                     dashed: dashed),
-                life);
-            foreach (var s in new[] {+1, -1}) {
-                animation.Lines.Add(
-                    new LineSegmentDesc(
-                        pos: start.Combine(delta, wedgeLength, (p, d, w) => new LineSegment(p + d, (s*d.Perp().Normal() - d.Normal()).Normal()*Math.Min(w, d.Length/2))),
-                        stroke: stroke,
-                        thickness: thickness,
-                        dashed: dashed),
-                    life);
-            }
+                new[] {+1, -1}.Select(
+                    s => new LineSegmentDesc(
+                             pos: start.Combine(
+                                 delta,
+                                 wedgeLength,
+                                 (p, d, w) =>
+                                 new LineSegment(p + d, (s*d.Perp().Normal() - d.Normal()).Normal()*Math.Min(w, d.Length/2))),
+                             stroke: stroke,
+                             thickness: thickness,
+                             dashed: dashed))
+            };
         }
         private static IEnumerable<Vector> PhaseCurve(double phaseWidth, double r = 1, double startPhase = 0) {
             if (phaseWidth < 0) phaseWidth += Math.PI*2;
-            yield return new Vector(0, 0);
             for (var d = 0.0; d <= phaseWidth; d += 1/r) {
                 yield return r * new Vector(Math.Cos(d + startPhase), -Math.Sin(d + startPhase));
             }
@@ -70,10 +66,12 @@ namespace Animations {
             rotation = rotation ?? Turn.Zero;
             sweepFill = sweepFill ?? fill;
             squish = squish ?? 1.0;
-            animation.Polygons.Add(
+            animation.Things.Add(
                 new PolygonDesc(
-                    phaseOffset.Combine(value, position, unitRadius, phaseRadius, (o, v, p, r, f) => PhaseCurve(v.Phase, f * r, o).Select(e => e + p).ToArray().AsEnumerable()),
-                    fill: sweepFill
+                    phaseOffset.Combine(value, position, unitRadius, phaseRadius, (o, v, p, r, f) => PhaseCurve(v.Phase, f * r*0.5, o).Select(e => e + p).ToArray().AsEnumerable()),
+                    //fill: sweepFill,
+                    stroke: sweepFill.Select(e => e.LerpTo(Brushes.Black, 0.5, lerpAlpha: false)),
+                    strokeThickness: value.Select(e => Math.Min(e.Magnitude*3,1))
                     ),
                 life); 
             // dashed unit circle
@@ -86,7 +84,7 @@ namespace Animations {
             //        dashed: 4),
             //    life);
             // dashed unit rect
-            animation.Rects.Add(
+            animation.Things.Add(
                 new RectDesc(
                     pos: position.Combine(unitRadius, (e, r) => new Rect(e.X - r, e.Y - r, 2*r, 2*r)),
                     stroke: valueGuideStroke ?? valueStroke,
@@ -97,27 +95,28 @@ namespace Animations {
                 life);
             // squared magnitude filling
             var mag = value.Select(e => e.Magnitude*e.Magnitude);
-            animation.Rects.Add(
+            animation.Things.Add(
                 new RectDesc(
                     pos: position.Combine(unitRadius, mag, squish, (e, r, v, s) => new Rect(e.X - r, e.Y + (1 - 2 * v) * r, 2 * r * s, 2 * r * v)),
                     fill: fill,
                     rotation: rotation,
-                    rotationOrigin: mag.Combine(squish, (v,s) => new Point(s == 0 ? 0 : (1/s)/2, 1 - 0.5/v))),
+                    rotationOrigin: mag.Combine(squish, (v,s) => new Point(s < 0.001 ? 0 : (1/s)/2, 1 - 0.5/v))),
                 life);
             // dashed reference line along positive real axis
-            animation.Lines.Add(
-                new LineSegmentDesc(
-                    position.Combine(unitRadius, (p, r) => new LineSegment(p, p + new Vector(r, 0))),
-                    dashed: 4,
-                    stroke: valueGuideStroke ?? valueStroke,
-                    thickness: 0.5), 
-                life);
+            //animation.Lines.Add(
+            //    new LineSegmentDesc(
+            //        position.Combine(unitRadius, (p, r) => new LineSegment(p, p + new Vector(r, 0))),
+            //        dashed: 4,
+            //        stroke: valueGuideStroke ?? valueStroke,
+            //        thickness: 0.5), 
+            //    life);
             // current value arrow
-            animation.ShowArrow(life,
-                                position,
-                                value.Combine(phaseOffset, (e, p) => e*Complex.Exp(Complex.ImaginaryOne*p))
-                                     .Combine(unitRadius, (v, r) => r*new Vector(v.Real, -v.Imaginary)),
-                                stroke: valueStroke);
+            animation.Things.Add(
+                Arrow(position,
+                      value.Combine(phaseOffset, (e, p) => e*Complex.Exp(Complex.ImaginaryOne*p))
+                           .Combine(unitRadius, (v, r) => r*new Vector(v.Real, -v.Imaginary)),
+                      stroke: valueStroke),
+                life);
         }
         private static void ShowComplexProduct(this Animation animation,
                                                Ani<Brush> fill1,
@@ -160,14 +159,14 @@ namespace Animations {
             animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(1, 0, 0, 0, 0))),
                                   Brushes.Transparent,
                                   time.Combine(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
-                                      v2.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0,0,1, 1, 1)),
+                                      v1.Magnitude < 0.001 ? 0 : v2.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0,0,1, 1, 1)),
                                       v2.Phase + v1.Phase)),
                                   position,
                                   unitRadius,
                                   life,
                                   valueGuideStroke: valueStroke1,
                                   sweepFill: fill1.Combine(time, (f, t) => f.LerpToTransparent(t.SmoothTransition(1, 1, 1,1,0))),
-                                  squish: time.Combine(value1, (t, v) => t.SmoothTransition(v.Magnitude * v.Magnitude, v.Magnitude * v.Magnitude, 1, 1, 1)));
+                                  squish: time.Combine(value1, (t, v) => Math.Pow(t.SmoothTransition(v.Magnitude, v.Magnitude, 1, 1, 1), 2)));
         }
         private static void ShowComplexSum(this Animation animation,
                                            Ani<Brush> fill1,
@@ -182,7 +181,7 @@ namespace Animations {
                                            Lifetime life) {
             Ani<Complex> sum = new ConstantAni<Complex>(Complex.Zero);
             foreach (var i in values.Count.Range()) {
-                animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 1, 1, 1, 1))),
+                animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 2, 1, 1, 1))),
                                       valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 0.1, 0.1, 1, 1))),
                                       values[i],
                                       position.Combine(positionDelta, time, sum, unitRadius, target, (p, d, t, s, u, p2) => (p + d * i).LerpTo(p2 + new Vector(s.Real * u, s.Imaginary * -u), t.SmoothTransition(0, 0, 1, 1, 1))),
@@ -222,6 +221,62 @@ namespace Animations {
                 }
             }, life);
         }
+        public static void ShowMatrix(this Animation animation,
+                                      Rect pos,
+                                      ComplexMatrix u,
+                                      Ani<Brush> or,
+                                      Ani<Brush> bla,
+                                      Lifetime life) {
+            var d = Math.Min(pos.Width / (u.Columns.Count + 2), pos.Height / (u.Rows.Count + 2)) / 2;
+            var ur = d;
+            animation.Things.Add(
+                new RectDesc(new Rect(pos.X + d * 2, pos.Y + d * 2, pos.Width - d * 4, pos.Height - d * 4),
+                             Brushes.Black,
+                             strokeThickness: 0.6,
+                             dashed: 5),
+                life);
+            animation.Things.Add(
+                new RectDesc(new Rect(pos.X, pos.Y + d * 2, d * 2, pos.Height - d * 4),
+                             Brushes.Black,
+                             strokeThickness: 0.6,
+                             dashed: 5),
+                life);
+            animation.Things.Add(
+                new RectDesc(new Rect(pos.Right - d * 2, pos.Y + d * 2, d * 2, pos.Height - d * 4),
+                             Brushes.Black,
+                             strokeThickness: 0.6,
+                             dashed: 5),
+                life);
+                foreach (var r in u.Rows.Count.Range()) {
+                    foreach (var c in u.Columns.Count.Range()) {
+                        // matrix
+                        animation.ShowComplex(or,
+                                              bla,
+                                              u.Rows[r][c],
+                                              (pos.TopLeft + new Vector(d*3 + c*d*2, d*3 + r*d*2)),
+                                              ur,
+                                              life);
+                    }
+                }
+
+            // move solution back to left side
+            //animation.HideShow(
+            //    time,
+            //    0.9,
+            //    0.1,
+            //    (li, pp) => {
+            //        foreach (var r in u.Rows.Count.Range()) {
+            //            // solution
+            //            animation.ShowComplex(blu,
+            //                                  bla,
+            //                                  u.Rows[r].Count.Range().Select(e => u.Rows[r][e]*v.Values[e]).Sum(),
+            //                                  pp.Select(p => (pos.TopLeft + new Vector(d*3 + u.Columns.Count*d*2, d*3 + r*d*2)).LerpTo(pos.TopLeft + new Vector(d, d*3+r*d*2), p.SmoothTransition(0,1,1))),
+            //                                  ur,
+            //                                  li);
+            //        }
+            //    },
+            //    life);
+        }
         public static void ShowMatrixMultiplication(this Animation animation,
                                                     Ani<double> time,
                                                     Rect pos,
@@ -234,19 +289,19 @@ namespace Animations {
                                                     Lifetime life) {
             var d = Math.Min(pos.Width/(u.Columns.Count + 2), pos.Height/(u.Rows.Count + 2))/2;
             var ur = d;
-            animation.Rects.Add(
+            animation.Things.Add(
                 new RectDesc(new Rect(pos.X + d * 2, pos.Y + d * 2, pos.Width - d * 4, pos.Height - d * 4),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
                 life);
-            animation.Rects.Add(
+            animation.Things.Add(
                 new RectDesc(new Rect(pos.X, pos.Y + d * 2, d * 2, pos.Height - d * 4),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
                 life);
-            animation.Rects.Add(
+            animation.Things.Add(
                 new RectDesc(new Rect(pos.Right - d*2, pos.Y + d * 2, d * 2, pos.Height - d * 4),
                              Brushes.Black,
                              strokeThickness: 0.6,
@@ -259,9 +314,9 @@ namespace Animations {
                 (li, pp) => {
                     foreach (var r in u.Rows.Count.Range()) {
                         // input vector
-                        var p1 = new Point(d, d*3 + r*d*2);
-                        var p2 = new Point(d*3 + r*d*2, d);
-                        var p3 = new Point(d*3 + r*d*2, d + (u.Rows.Count + 1)*d*2);
+                        var p1 = pos.TopLeft + new Vector(d, d*3 + r*d*2);
+                        var p2 = pos.TopLeft + new Vector(d * 3 + r * d * 2, d);
+                        var p3 = pos.TopLeft + new Vector(d * 3 + r * d * 2, d + (u.Rows.Count + 1) * d * 2);
                         animation.ShowComplex(pp.Combine(blu, (p, b) => b.LerpToTransparent(p.SmoothTransition(0, 0, 1))),
                                               pp.Combine(bla, (p, b) => b.LerpToTransparent(p.SmoothTransition(0, 0, 1))),
                                               v.Values[r],
@@ -314,7 +369,7 @@ namespace Animations {
             animation.HideShow(
                 time,
                 0.5,
-                0.4,
+                0.5,
                 (li, pp) => {
                     foreach (var r in u.Rows.Count.Range()) {
                         animation.ShowComplexSum(blu,
@@ -332,78 +387,172 @@ namespace Animations {
                     }
                 },
                 life);
-            animation.HideShow(
-                time,
-                0.9,
-                0.1,
-                (li, pp) => {
-                    foreach (var r in u.Rows.Count.Range()) {
-                        // solution
-                        animation.ShowComplex(blu,
-                                              bla,
-                                              u.Rows[r].Count.Range().Select(e => u.Rows[r][e]*v.Values[e]).Sum(),
-                                              pp.Select(p => (pos.TopLeft + new Vector(d*3 + u.Columns.Count*d*2, d*3 + r*d*2)).LerpTo(pos.TopLeft + new Vector(d, d*3+r*d*2), p.SmoothTransition(0,1,1))),
-                                              ur,
-                                              li);
-                    }
-                },
-                life);
+            
+            // move solution back to left side
+            //animation.HideShow(
+            //    time,
+            //    0.9,
+            //    0.1,
+            //    (li, pp) => {
+            //        foreach (var r in u.Rows.Count.Range()) {
+            //            // solution
+            //            animation.ShowComplex(blu,
+            //                                  bla,
+            //                                  u.Rows[r].Count.Range().Select(e => u.Rows[r][e]*v.Values[e]).Sum(),
+            //                                  pp.Select(p => (pos.TopLeft + new Vector(d*3 + u.Columns.Count*d*2, d*3 + r*d*2)).LerpTo(pos.TopLeft + new Vector(d, d*3+r*d*2), p.SmoothTransition(0,1,1))),
+            //                                  ur,
+            //                                  li);
+            //        }
+            //    },
+            //    life);
         }
         public static Animation Animate(Lifetime life) {
             var animation = new Animation();
 
-            var s = Math.Sqrt(0.5);
-            var i = Complex.ImaginaryOne;
-            var z = i*s;
-            var v = new ComplexVector(new[] { -s, 0, 0, i * s });
-            var u = ComplexMatrix.FromCellData(
-                0, s, z, 0,
-                s, 0, 0, z,
-                z, 0, 0, s,
-                0, z, s, 0);
 
-            var n = 8;
-            var rr = new Random();
-            Func<Complex> cc = () => new Complex(rr.NextDouble() - 0.5, rr.NextDouble() - 0.5)*1.05;
-            u = ComplexMatrix.FromCellData((n * n).Range().Select(_ => cc()).ToArray());
-            var uw = ComplexMatrix.FromCellData((n * n).Range().Select(_ => cc()).ToArray());
-            var hw = ComplexMatrix.FromCellData((n * n).Range().Select(_ => cc()).ToArray());
-            v = new ComplexVector(n.Range().Select(_ => cc()).ToArray());
+            var pow = 2;
+            var v0 = new ComplexVector(new Complex[] {1, 0,0,0});
+            var H1 = ComplexMatrix.MakeUnitaryHadamard(pow);
+            var v1 = v0*H1;
+            var v2 = v1*H1;
 
-            //uw = ComplexMatrix.FromCellData(
-            //    (from c in n.Range()
-            //     from r in n.Range()
-            //     select r != c ? Complex.Zero : r == 1 ? -Complex.One : Complex.One).ToArray());
-            //hw = ComplexMatrix.FromCellData(
-            //    (from c in n.Range()
-            //     from r in n.Range()
-            //     select -2*Complex.One/n + (r == c ? 1 : 0)).ToArray());
-            
-            //u = uw*hw;
-            //v = new ComplexVector(ReadOnlyList.Repeat(Complex.One/Math.Sqrt(n), n));
-            var nr = (int)Math.Floor(Math.Sqrt(n))*6;
-            var sp = 10.Seconds();
-            foreach (var pi in nr.Range()) {
-                var x1 = v;
-                var m = pi%2 == 0 ? uw : hw;
-                v *= m;
-                animation.HideShow(
-                    sp.Times(nr+1),
-                    sp.Times(pi),
-                    sp,
-                    (li, tt) =>
-                    animation.ShowMatrixMultiplication(
-                        tt,
-                        new Rect(0, 0, 500, 500),
-                        m,
-                        x1,
-                        Brushes.Orange.LerpToTransparent(0.5),
-                        Brushes.Blue.LerpToTransparent(0.7),
-                        Brushes.Green.LerpToTransparent(0.5),
-                        Brushes.Black,
-                        li),
+            var m = 250.0;
+            var w = m / (v0.Values.Count+2)/2;
+            var m2 = m/2;
+            var x1 = 200;
+            var x2 = 500;
+            animation.Things.Add(new LineSegmentDesc(new Point(50, 50 - 10).Sweep(new Vector(1000, 0))), life);
+            animation.Things.Add(new LineSegmentDesc(new Point(50, 50 + 10).Sweep(new Vector(1000, 0))), life);
+            animation.Things.Add(
+                new TextDesc("qbit0=1_",
+                             new Point(50, 50 - 10),
+                             new Point(1.0, 0.5)),
+                life);
+            animation.Things.Add(
+                new TextDesc("qbit1=_0",
+                             new Point(50, 50 + 10),
+                             new Point(1.0, 0.5)),
+                life);
+            var t1 = 10.Seconds().Times((x1 - m2) / 600);
+            var t2 = 10.Seconds().Times((x1 + m2 - w * 2) / 600);
+            var t3 = 10.Seconds().Times((x2 - m2) / 600);
+            var t4 = 10.Seconds().Times((x2 + m2 - w * 2) / 600);
+            var sw = Ani.Anon(t => new Point((t.TotalSeconds / 10).LerpTransition(0, 600), 0).Sweep(new Vector(0, 1000)));
+            animation.Things.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4), life);
+            animation.Things.Add(new RectDesc(new Rect(x1 - 25, 50 - 25, 50, 50), Brushes.Black, Brushes.White, 1.0), life);
+            animation.Things.Add(new TextDesc("H", new Point(x1, 50), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20), life);
+            animation.Things.Add(new RectDesc(new Rect(x2 - 25, 50 - 25, 50, 50), Brushes.Black, Brushes.White, 1.0), life);
+            animation.Things.Add(new TextDesc("H", new Point(x2, 50), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20), life);
+            foreach (var j in v0.Values.Count.Range()) {
+                animation.Things.Add(
+                    new TextDesc("|" + Convert.ToString(j, 2).PadLeft(pow, '0') + ">",
+                                 sw.Select(e => new Point(0, 100 + w*3) + new Vector(0, j*w*2)),
+                                 new Point(0.0, 0.5)),
                     life);
             }
+
+            animation.HideShow(
+                10.Seconds(),
+                0.Seconds(),
+                t1,
+                (li, tt) => {
+                    foreach (var j in v0.Values.Count.Range()) {
+                        animation.ShowComplex(Brushes.Blue.LerpToTransparent(0.7), Brushes.Black, v0.Values[j], sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w*3) + new Vector(0, j * w*2)), w, li);
+                    }
+                },
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                0.Seconds(),
+                t1,
+                (li, tt) => animation.ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
+                                                 H1,
+                                                 Brushes.Orange.LerpToTransparent(0.5),
+                                                 Brushes.Black,
+                                                 li),
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                t2,
+                10.Seconds()-t2,
+                (li, tt) => animation.ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
+                                                 H1,
+                                                 Brushes.Orange.LerpToTransparent(0.5),
+                                                 Brushes.Black,
+                                                 li),
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                0.Seconds(),
+                t3,
+                (li, tt) => animation.ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
+                                                 H1,
+                                                 Brushes.Orange.LerpToTransparent(0.5),
+                                                 Brushes.Black,
+                                                 li),
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                t4,
+                10.Seconds()-t4,
+                (li, tt) => animation.ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
+                                                 H1,
+                                                 Brushes.Orange.LerpToTransparent(0.5),
+                                                 Brushes.Black,
+                                                 li),
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                t1,
+                t2-t1,
+                (li, tt) =>
+                animation.ShowMatrixMultiplication(
+                    tt,
+                    new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
+                    H1,
+                    v0,
+                    Brushes.Orange.LerpToTransparent(0.5),
+                    Brushes.Blue.LerpToTransparent(0.7),
+                    Brushes.Green.LerpToTransparent(0.5),
+                    Brushes.Black,
+                    li),
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                t3,
+                t4 - t3,
+                (li, tt) =>
+                animation.ShowMatrixMultiplication(
+                    tt,
+                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
+                    H1,
+                    v1,
+                    Brushes.Orange.LerpToTransparent(0.5),
+                    Brushes.Blue.LerpToTransparent(0.7),
+                    Brushes.Green.LerpToTransparent(0.5),
+                    Brushes.Black,
+                    li),
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                t2,
+                t3 - t2,
+                (li, tt) => {
+                    foreach (var j in v1.Values.Count.Range()) {
+                        animation.ShowComplex(Brushes.Blue.LerpToTransparent(0.7), Brushes.Black, v1.Values[j], sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w * 3) + new Vector(0, j * w * 2)), w, li);
+                    }
+                },
+                life);
+            animation.HideShow(
+                10.Seconds(),
+                t4,
+                10.Seconds() - t4,
+                (li, tt) => {
+                    foreach (var j in v2.Values.Count.Range()) {
+                        animation.ShowComplex(Brushes.Blue.LerpToTransparent(0.7), Brushes.Black, v2.Values[j], sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w * 3) + new Vector(0, j * w * 2)), w, li);
+                    }
+                },
+                life);
             return animation;
         }
     }

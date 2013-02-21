@@ -27,8 +27,8 @@ namespace Animations {
                 return new {c, r, v, li, h};
             });
 
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.li)), life);
-            animation.Points.Add(
+            animation.Things.Add(new LineSegmentDesc(state.Select(e => e.li)), life);
+            animation.Things.Add(
                 new PointDesc(
                     state.Select(e => e.c),
                     Brushes.Black,
@@ -36,10 +36,10 @@ namespace Animations {
                     state.Select(e => (double)e.r),
                     1.0),
                 life);
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v*1000)), Brushes.Red), life);
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) + e.v.Perp() * e.r), Brushes.LightGray), life);
-            animation.Lines.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) - e.v.Perp() * e.r), Brushes.LightGray), life);
-            animation.Points.Add(
+            animation.Things.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000)), Brushes.Red), life);
+            animation.Things.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) + e.v.Perp() * e.r), Brushes.LightGray), life);
+            animation.Things.Add(new LineSegmentDesc(state.Select(e => e.c.Sweep(e.v * 1000) - e.v.Perp() * e.r), Brushes.LightGray), life);
+            animation.Things.Add(
                 new PointDesc(
                     state.Select(e => (e.c + e.v * e.h) ?? new Point(-10000, -10000)), 
                     Brushes.Gray, 

@@ -78,7 +78,7 @@ namespace Animatron {
             recording.SkipWhile(e => !e).DistinctUntilChanged().Where(e => !e).Subscribe(e => {
                 using (var f = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
                     encoder.Save(f);
-                    f.AdjustEncodedGif(stepdt);
+                    //f.AdjustEncodedGif(stepdt);
                     encoder = new GifBitmapEncoder();
                 }
             });

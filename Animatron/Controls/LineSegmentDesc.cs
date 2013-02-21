@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using TwistedOak.Collections;
 using TwistedOak.Util;
 using LineSegment = SnipSnap.Mathematics.LineSegment;
 using Animatron;
 
-public sealed class LineSegmentDesc {
+public sealed class LineSegmentDesc : IControlDescription<Line> {
     public readonly Ani<LineSegment> Pos;
     public readonly Ani<Brush> Stroke;
     public readonly Ani<double> Thickness;
@@ -18,18 +20,23 @@ public sealed class LineSegmentDesc {
         this.Thickness = thickness ?? 1;
         this.Dashed = dashed ?? 0;
     }
-    public void Link(Line line, IObservable<TimeSpan> pulse, Lifetime life) {
-        if (line == null) throw new ArgumentNullException("line");
+    public void Link(Line control, IObservable<TimeSpan> pulse, Lifetime life) {
+        if (control == null) throw new ArgumentNullException("control");
         if (pulse == null) throw new ArgumentNullException("pulse");
-        Pos.Select(e => e.Start.X).Watch(life, pulse, e => line.X1 = e);
-        Pos.Select(e => e.End.X).Watch(life, pulse, e => line.X2 = e);
-        Pos.Select(e => e.Start.Y).Watch(life, pulse, e => line.Y1 = e);
-        Pos.Select(e => e.End.Y).Watch(life, pulse, e => line.Y2 = e);
-        Stroke.Watch(life, pulse, e => line.Stroke = e);
-        Thickness.Watch(life, pulse, e => line.StrokeThickness = e);
+        Pos.Select(e => e.Start.X).Watch(life, pulse, e => control.X1 = e);
+        Pos.Select(e => e.End.X).Watch(life, pulse, e => control.X2 = e);
+        Pos.Select(e => e.Start.Y).Watch(life, pulse, e => control.Y1 = e);
+        Pos.Select(e => e.End.Y).Watch(life, pulse, e => control.Y2 = e);
+        Stroke.Watch(life, pulse, e => control.Stroke = e);
+        Thickness.Watch(life, pulse, e => control.StrokeThickness = e);
         Dashed.Watch(life, pulse, e => {
-            line.StrokeDashArray.Clear();
-            if (e != 0) line.StrokeDashArray.Add(e);
+            control.StrokeDashArray.Clear();
+            if (e != 0) control.StrokeDashArray.Add(e);
         });
+    }
+    public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
+        var r = new Line();
+        Link(r, pulse, life);
+        controls.Add(r, life);
     }
 }

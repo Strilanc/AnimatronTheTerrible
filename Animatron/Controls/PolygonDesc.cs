@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using TwistedOak.Collections;
 using TwistedOak.Util;
 using Animatron;
 using System.Linq;
 
-public sealed class PolygonDesc {
+public sealed class PolygonDesc : IControlDescription<Polygon> {
     public readonly Ani<IEnumerable<Point>> Pos;
     public readonly Ani<Brush> Stroke;
     public readonly Ani<Brush> Fill;
@@ -55,5 +56,10 @@ public sealed class PolygonDesc {
             }
             return h;
         }
+    }
+    public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
+        var r = new Polygon();
+        Link(r, pulse, life);
+        controls.Add(r, life);
     }
 }

@@ -101,22 +101,22 @@ namespace Animatron {
             if (p >= 1) return Brushes.Transparent;
             return new SolidColorBrush(start.Color.LerpToTransparent(p));
         }
-        public static SolidColorBrush LerpTo(this SolidColorBrush start, SolidColorBrush finish, double p) {
+        public static SolidColorBrush LerpTo(this SolidColorBrush start, SolidColorBrush finish, double p, bool lerpAlpha = true) {
             if (p <= 0) return start;
             if (p >= 1) return finish;
-            return new SolidColorBrush(start.Color.LerpTo(finish.Color, p));
+            return new SolidColorBrush(start.Color.LerpTo(finish.Color, p, lerpAlpha));
         }
         public static Brush LerpToTransparent(this Brush start, double p) {
             var s = start as SolidColorBrush;
             if (s == null) throw new ArgumentException();
             return s.LerpToTransparent(p);
         }
-        public static Brush LerpTo(this Brush start, Brush finish, double p) {
+        public static Brush LerpTo(this Brush start, Brush finish, double p, bool lerpAlpha = true) {
             var s = start as SolidColorBrush;
             var f = finish as SolidColorBrush;
             if (s == null) throw new ArgumentException();
             if (f == null) throw new ArgumentException();
-            return s.LerpTo(f, p);
+            return s.LerpTo(f, p, lerpAlpha);
         }
         public static Color LerpToTransparent(this Color start, double p) {
             return Color.FromArgb(
@@ -125,9 +125,9 @@ namespace Animatron {
                 start.G,
                 start.B);
         }
-        public static Color LerpTo(this Color start, Color finish, double p) {
+        public static Color LerpTo(this Color start, Color finish, double p, bool lerpAlpha = true) {
             return Color.FromArgb(
-                start.A.LerpTo(finish.A, p),
+                lerpAlpha ? start.A.LerpTo(finish.A, p) : start.A,
                 start.R.LerpTo(finish.R, p),
                 start.G.LerpTo(finish.G, p),
                 start.B.LerpTo(finish.B, p));

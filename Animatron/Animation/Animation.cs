@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
@@ -14,29 +15,18 @@ using TwistedOak.Util;
 using System.Linq;
 
 namespace Animatron {
-    public sealed class Animation {
+    public sealed class Animation : IEnumerable<IControlDescription>, IControlDescription {
         public readonly PerishableCollection<Action<Step>> StepActions = new PerishableCollection<Action<Step>>(); 
         public readonly PerishableCollection<UIElement> Controls = new PerishableCollection<UIElement>();
-        public readonly PerishableCollection<PointDesc> Points = new PerishableCollection<PointDesc>();
-        public readonly PerishableCollection<RectDesc> Rects = new PerishableCollection<RectDesc>();
-        public readonly PerishableCollection<PolygonDesc> Polygons = new PerishableCollection<PolygonDesc>();
-        public readonly PerishableCollection<LineSegmentDesc> Lines = new PerishableCollection<LineSegmentDesc>();
-        public readonly PerishableCollection<TextDesc> Labels = new PerishableCollection<TextDesc>();
+        public readonly PerishableCollection<IControlDescription> Things = new PerishableCollection<IControlDescription>();
 
-        public void LinkMany(IAni<IEnumerable<PointDesc>> values, Lifetime life) {
-            LinkMany(values, Points, life);
+        public void AddSubAnimation(Animation animation, Lifetime life) {
+            animation.StepActions.CurrentAndFutureItems().Subscribe(e => StepActions.Add(e.Value, e.Lifetime.Min(life)));
+            animation.Controls.CurrentAndFutureItems().Subscribe(e => Controls.Add(e.Value, e.Lifetime.Min(life)));
+            animation.Things.CurrentAndFutureItems().Subscribe(e => Things.Add(e.Value, e.Lifetime.Min(life)));
         }
-        public void LinkMany(IAni<IEnumerable<RectDesc>> values, Lifetime life) {
-            LinkMany(values, Rects, life);
-        }
-        public void LinkMany(IAni<IEnumerable<PolygonDesc>> values, Lifetime life) {
-            LinkMany(values, Polygons, life);
-        }
-        public void LinkMany(IAni<IEnumerable<LineSegmentDesc>> values, Lifetime life) {
-            LinkMany(values, Lines, life);
-        }
-        public void LinkMany(IAni<IEnumerable<TextDesc>> values, Lifetime life) {
-            LinkMany(values, Labels, life);
+        public void LinkMany(IAni<IEnumerable<IControlDescription>> values, Lifetime life) {
+            LinkMany(values, Things, life);
         }
         private void LinkMany<T>(IAni<IEnumerable<T>> values, PerishableCollection<T> col, Lifetime life) {
             var d = new Dictionary<T, LifetimeSource>();
@@ -75,32 +65,15 @@ namespace Animatron {
                 return Dynamic(step => cur = stepper(cur, step)).Subscribe(observer);
             });
         }
+        public void Add(IControlDescription immortalThing) {
+            Things.Add(immortalThing, Lifetime.Immortal);
+        }
+        public void Add(IEnumerable<IControlDescription> immortalThing) {
+            foreach (var e in immortalThing)
+                Add(e);
+        }
         public Animation() {
-            Points.CurrentAndFutureItems().Subscribe(e => {
-                var r = new Ellipse();
-                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
-                Controls.Add(r, e.Lifetime);
-            });
-            Rects.CurrentAndFutureItems().Subscribe(e => {
-                var r = new Rectangle();
-                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
-                Controls.Add(r, e.Lifetime);
-            });
-            Lines.CurrentAndFutureItems().Subscribe(e => {
-                var r = new Line();
-                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
-                Controls.Add(r, e.Lifetime);
-            });
-            Labels.CurrentAndFutureItems().Subscribe(e => {
-                var r = new TextBlock();
-                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
-                Controls.Add(r, e.Lifetime);
-            });
-            Polygons.CurrentAndFutureItems().Subscribe(e => {
-                var r = new Polygon();
-                e.Value.Link(r, NextElapsedTime(), e.Lifetime);
-                Controls.Add(r, e.Lifetime);
-            });
+            Things.CurrentAndFutureItems().Subscribe(e => e.Value.Link(Controls, NextElapsedTime(), e.Lifetime));
         }
         public async Task Run(Lifetime life, TimeSpan? delayTime = default(TimeSpan?)) {
             var clock = new Stopwatch();
@@ -131,6 +104,15 @@ namespace Animatron {
                     e.Lifetime.WhenDead(() => canvas.Children.Remove(e.Value));
                 },
                 life);
+        }
+        public IEnumerator<IControlDescription> GetEnumerator() {
+            return Things.CurrentItems().Select(e => e.Value).GetEnumerator();
+        }
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
+        }
+        public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
+            Things.CurrentAndFutureItems().Subscribe(e => e.Value.Link(controls, pulse, e.Lifetime.Min(life)));
         }
     }
 }
