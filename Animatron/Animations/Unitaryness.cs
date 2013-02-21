@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using Animatron;
 using SnipSnap.Mathematics;
+using Strilanc.Angle;
 using TwistedOak.Util;
 using Strilanc.LinqToCollections;
 using LineSegment = SnipSnap.Mathematics.LineSegment;
@@ -60,23 +61,48 @@ namespace Animations {
                                         Lifetime life,
                                         Ani<Brush> valueGuideStroke = null,
                                         Ani<double> phaseOffset = null,
-                                        Ani<double> phaseRadius = null) {
+                                        Ani<double> phaseRadius = null,
+                                        Ani<Turn> rotation = null,
+                                        Ani<Brush> sweepFill = null,
+                                        Ani<double> squish = null) {
             phaseOffset = phaseOffset ?? 0;
             phaseRadius = phaseRadius ?? value.Select(e => Math.Max(0.05, e.Magnitude));
+            rotation = rotation ?? Turn.Zero;
+            sweepFill = sweepFill ?? fill;
+            squish = squish ?? 1.0;
             animation.Polygons.Add(
                 new PolygonDesc(
                     phaseOffset.Combine(value, position, unitRadius, phaseRadius, (o, v, p, r, f) => PhaseCurve(v.Phase, f * r, o).Select(e => e + p).ToArray().AsEnumerable()),
-                    fill: fill
+                    fill: sweepFill
                     ),
                 life); 
             // dashed unit circle
-            animation.Points.Add(
-                new PointDesc(
-                    pos: position,
-                    radius: unitRadius,
+            //animation.Points.Add(
+            //    new PointDesc(
+            //        pos: position,
+            //        radius: unitRadius,
+            //        stroke: valueGuideStroke ?? valueStroke,
+            //        strokeThickness: 0.5,
+            //        dashed: 4),
+            //    life);
+            // dashed unit rect
+            animation.Rects.Add(
+                new RectDesc(
+                    pos: position.Combine(unitRadius, (e, r) => new Rect(e.X - r, e.Y - r, 2*r, 2*r)),
                     stroke: valueGuideStroke ?? valueStroke,
                     strokeThickness: 0.5,
-                    dashed: 4),
+                    dashed: 4,
+                    rotation: rotation,
+                    rotationOrigin: new Point(0.5, 0.5)),
+                life);
+            // squared magnitude filling
+            var mag = value.Select(e => e.Magnitude*e.Magnitude);
+            animation.Rects.Add(
+                new RectDesc(
+                    pos: position.Combine(unitRadius, mag, squish, (e, r, v, s) => new Rect(e.X - r, e.Y + (1 - 2 * v) * r, 2 * r * s, 2 * r * v)),
+                    fill: fill,
+                    rotation: rotation,
+                    rotationOrigin: mag.Combine(squish, (v,s) => new Point(s == 0 ? 0 : (1/s)/2, 1 - 0.5/v))),
                 life);
             // dashed reference line along positive real axis
             animation.Lines.Add(
@@ -104,24 +130,44 @@ namespace Animations {
                                                Ani<double> unitRadius,
                                                Ani<double> time,
                                                Lifetime life) {
-            animation.ShowComplex(fill1,
+            // vertical input
+            animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 1, 1, 1, 1))),
                                   valueStroke1,
                                   time.Combine(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
-                                      v1.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0, 0, 1)),
-                                      v1.Phase + 0.0.LerpTo(v2.Phase.ProperMod(Math.PI * 2), t.SmoothTransition(0, 0, 1)))),
+                                      v1.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0, 0, 1, 1, 1)),
+                                      v1.Phase)),
                                   position,
                                   unitRadius,
                                   life,
-                                  phaseOffset: time.Combine(value2, (t, v) => t.SmoothTransition(0, 1, 0)*v.Phase.ProperMod(Math.PI * 2)));
-            animation.ShowComplex(fill2.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 0, 1))),
-                                  valueStroke2.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 0, 1))),
+                                  rotation: Turn.FromNaturalAngle(Math.PI / 2),
+                                  phaseOffset: time.Combine(value2, (t, v) => t.SmoothTransition(0,0,0, 1, 1) * v.Phase.ProperMod(Math.PI * 2)),
+                                  sweepFill: fill1.Combine(time, (f, t) => f.LerpToTransparent(t.SmoothTransition(0, 0, 0, 0, 1))),
+                                  valueGuideStroke: Brushes.Transparent);
+
+            // horizontal input
+            animation.ShowComplex(fill2.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0,1,1, 1, 1))),
+                                  valueStroke2.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0,0,0, 0, 1))),
                                   time.Combine(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
-                                      v2.Magnitude.LerpTo(0, t.SmoothTransition(0, 0, 1)),
-                                      v2.Phase.ProperMod(Math.PI * 2).LerpTo(0, t.SmoothTransition(0, 0, 1)))),
+                                      v2.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0, 0, 1, 1, 1)),
+                                      v2.Phase)),
                                   position,
                                   unitRadius,
                                   life,
-                                  Brushes.Transparent);
+                                  sweepFill: fill2.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(0, 0, 0, 0, 1))),
+                                  valueGuideStroke: Brushes.Transparent);
+            
+            // result
+            animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.LerpTransition(1, 0, 0, 0, 0))),
+                                  Brushes.Transparent,
+                                  time.Combine(value1, value2, (t, v1, v2) => Complex.FromPolarCoordinates(
+                                      v2.Magnitude.LerpTo(v1.Magnitude * v2.Magnitude, t.SmoothTransition(0,0,1, 1, 1)),
+                                      v2.Phase + v1.Phase)),
+                                  position,
+                                  unitRadius,
+                                  life,
+                                  valueGuideStroke: valueStroke1,
+                                  sweepFill: fill1.Combine(time, (f, t) => f.LerpToTransparent(t.SmoothTransition(1, 1, 1,1,0))),
+                                  squish: time.Combine(value1, (t, v) => t.SmoothTransition(v.Magnitude * v.Magnitude, v.Magnitude * v.Magnitude, 1, 1, 1)));
         }
         private static void ShowComplexSum(this Animation animation,
                                            Ani<Brush> fill1,
@@ -136,22 +182,24 @@ namespace Animations {
                                            Lifetime life) {
             Ani<Complex> sum = new ConstantAni<Complex>(Complex.Zero);
             foreach (var i in values.Count.Range()) {
-                animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 0, 1, 1, 1))),
+                animation.ShowComplex(fill1.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 1, 1, 1, 1))),
                                       valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 0.1, 0.1, 1, 1))),
                                       values[i],
                                       position.Combine(positionDelta, time, sum, unitRadius, target, (p, d, t, s, u, p2) => (p + d * i).LerpTo(p2 + new Vector(s.Real * u, s.Imaginary * -u), t.SmoothTransition(0, 0, 1, 1, 1))),
                                       unitRadius,
                                       life,
-                                      valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 1, 1, 1, 1))));
+                                      valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 1, 1, 1, 1))),
+                                      sweepFill: fill1.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(0, 0, 1, 1, 1))));
                 sum = sum.Combine(values[i], (s, v) => s + v);
             }
-            animation.ShowComplex(fill2.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 0, 0, 0))),
+            animation.ShowComplex(fill2.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 1, 0, 0))),
                                   valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 1, 0, 0))),
                                   sum,
                                   target,
                                   unitRadius,
                                   life,
-                                  valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 0, 0, 0))));
+                                  valueStroke.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 0, 0, 0))),
+                                  sweepFill: fill2.Combine(time, (s, t) => s.LerpToTransparent(t.SmoothTransition(1, 1, 0, 0, 0))));
         }
         private static void HideShow(this Animation animation, Ani<double> time, double offset, double activePeriod, Action<Lifetime, Ani<double>> setup, Lifetime life) {
             animation.HideShow(time.Select(t => t.ProperMod(1) - offset).Select(t => t >= 0 && t < activePeriod),
@@ -219,7 +267,8 @@ namespace Animations {
                                               v.Values[r],
                                               pp.Select(p => p.SmoothTransition(p1, p1, p2, p3)),
                                               ur,
-                                              li);
+                                              li,
+                                              rotation: pp.Select(t => Turn.FromNaturalAngle(t.SmoothTransition(0, Math.PI / 2, Math.PI / 2))));
                         foreach (var c in u.Columns.Count.Range()) {
                             // vector copied into matrix
                             animation.ShowComplex(pp.Combine(blu, (p, b) => b.LerpToTransparent(p.SmoothTransition(1, 1, 0))),
@@ -228,7 +277,8 @@ namespace Animations {
                                                   (pos.TopLeft + new Vector(d * 3 + c * d * 2, d * 3 + r * d * 2)),
                                                   ur,
                                                   li,
-                                                  Brushes.Transparent);
+                                                  Brushes.Transparent,
+                                                  rotation: Turn.FromNaturalAngle(Math.PI / 2));
                             // matrix
                             animation.ShowComplex(pp.Combine(or, (p, b) => b.LerpToTransparent(p.SmoothTransition(0, 0, 0))),
                                                   pp.Combine(bla, (p, b) => b.LerpToTransparent(p.SmoothTransition(0, 0, 0))),
@@ -332,7 +382,7 @@ namespace Animations {
             //u = uw*hw;
             //v = new ComplexVector(ReadOnlyList.Repeat(Complex.One/Math.Sqrt(n), n));
             var nr = (int)Math.Floor(Math.Sqrt(n))*6;
-            var sp = 3.Seconds();
+            var sp = 10.Seconds();
             foreach (var pi in nr.Range()) {
                 var x1 = v;
                 var m = pi%2 == 0 ? uw : hw;
