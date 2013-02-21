@@ -21,6 +21,20 @@ namespace SnipSnap.Mathematics {
         public static T Min<T>(this T value1, T value2) where T : IComparable<T> {
             return value1.CompareTo(value2) <= 0 ? value1 : value2;
         }
+        public static IEnumerable<R> Stream<R, T>(this IEnumerable<T> items, R seed, Func<R, T, R> aggregator) {
+            foreach (var e in items) {
+                yield return seed = aggregator(seed, e);
+            }
+        }
+        public static IEnumerable<T> Stream<T>(this IEnumerable<T> items, Func<T, T, T> aggregator) {
+            var b = false;
+            var cur = default(T);
+            foreach (var e in items) {
+                cur = b ? aggregator(cur, e) : e;
+                b = true;
+                yield return cur;
+            }
+        }
         ///<summary>Clamps a value to be not-less-than a minimum and not-larger-than a maximum.</summary>
         public static T Clamp<T>(this T value, T min, T max) where T : IComparable<T> {
             if (max.CompareTo(min) < 0) throw new ArgumentOutOfRangeException("max", "max < min");

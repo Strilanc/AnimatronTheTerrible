@@ -7,7 +7,6 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Shapes;
 using SnipSnap.Mathematics;
 using TwistedOak.Collections;
 using TwistedOak.Element.Env;
@@ -15,7 +14,7 @@ using TwistedOak.Util;
 using System.Linq;
 
 namespace Animatron {
-    public sealed class Animation : IEnumerable<IControlDescription>, IControlDescription {
+    public sealed class Animation : IEnumerable<Unit>, IControlDescription {
         public readonly PerishableCollection<Action<Step>> StepActions = new PerishableCollection<Action<Step>>(); 
         public readonly PerishableCollection<UIElement> Controls = new PerishableCollection<UIElement>();
         public readonly PerishableCollection<IControlDescription> Things = new PerishableCollection<IControlDescription>();
@@ -105,8 +104,8 @@ namespace Animatron {
                 },
                 life);
         }
-        public IEnumerator<IControlDescription> GetEnumerator() {
-            return Things.CurrentItems().Select(e => e.Value).GetEnumerator();
+        public IEnumerator<Unit> GetEnumerator() {
+            throw new NotSupportedException();
         }
         IEnumerator IEnumerable.GetEnumerator() {
             return GetEnumerator();
