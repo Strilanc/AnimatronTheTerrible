@@ -14,6 +14,26 @@ using TwistedOak.Util;
 
 namespace Animatron {
     public static class Util {
+        public static Timeline Where(this IHasThings x, Func<TimeSpan, bool> f) {
+            var r = new Timeline(e => f(e) ? (TimeSpan?)e : null, x.Proper);
+            x.Things.Add(r, Lifetime.Immortal);
+            return r;
+        }
+        public static Timeline Limited(this IHasThings x, TimeSpan start, TimeSpan finish) {
+            var r = new Timeline(e => e < start || e >= finish ? null : (TimeSpan?)(e), Ani.Anon(t => (t - start).DividedBy(finish -start)));
+            x.Things.Add(r, Lifetime.Immortal);
+            return r;
+        }
+        public static Timeline Periodic(this IHasThings x, TimeSpan period) {
+            var r = new Timeline(e => e.Mod(period), Ani.Anon(t => t.Mod(period).DividedBy(period)));
+            x.Things.Add(r, Lifetime.Immortal);
+            return r;
+        }
+        public static Timeline Dilated(this IHasThings x, TimeSpan oneSecond, TimeSpan zero = default(TimeSpan)) {
+            var r = new Timeline(e => ((e - zero).DividedBy(oneSecond)).Seconds(), Ani.Anon(t => x.Proper.ValueAt(t.Times(oneSecond.TotalSeconds) + zero)));
+            x.Things.Add(r, Lifetime.Immortal);
+            return r;
+        }
         public static string StringJoin<T>(this IEnumerable<T> items, string separator) {
             if (items == null) throw new ArgumentNullException("items");
             return string.Join(separator, items);
@@ -95,6 +115,9 @@ namespace Animatron {
                 r == 0 ? (object)"" : r,
                 i < 0 ? "-" : "+",
                 i == 1 || i == -1 ? "i" : String.Format("{0:0.###}i", Math.Abs(i)));
+        }
+        public static string ToMagPhaseString(this Complex c) {
+            return string.Format("√{0:0.##} ⋅ ∠{1:0}°", c.Magnitude * c.Magnitude, Math.Round(c.Phase * 180 / Math.PI));
         }
         public static SolidColorBrush LerpToTransparent(this SolidColorBrush start, double p) {
             if (p <= 0) return start;

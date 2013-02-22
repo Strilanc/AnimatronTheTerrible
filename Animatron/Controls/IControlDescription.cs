@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using Animatron;
 using TwistedOak.Collections;
 using TwistedOak.Util;
 
@@ -8,6 +9,10 @@ public interface IControlDescription {
 }
 public interface IControlDescription<T> : IControlDescription {
     void Link(T control, IObservable<TimeSpan> pulse, Lifetime life);
+}
+public interface IHasThings {
+    Ani<double> Proper { get; }
+    PerishableCollection<IControlDescription> Things { get; }
 }
 public sealed class AnonymousControlDescription : IControlDescription {
     private readonly Action<PerishableCollection<UIElement>, IObservable<TimeSpan>, Lifetime> _link;

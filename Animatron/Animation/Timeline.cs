@@ -1,36 +1,29 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reactive;
 using System.Windows;
 using TwistedOak.Collections;
 using TwistedOak.Util;
 using System.Reactive.Linq;
-using TwistedOak.Element.Env;
 
 namespace Animatron {
-    public sealed class Timeline : IEnumerable<Unit>, IControlDescription {
-        public readonly PerishableCollection<IControlDescription> Things = new PerishableCollection<IControlDescription>();
+    public sealed class Timeline : IHasThings, IEnumerable<Unit>, IControlDescription {
+        public PerishableCollection<IControlDescription> Things { get; private set; }
         private readonly Func<TimeSpan, TimeSpan?> _timeTransformFromOutsideToInside;
-        public Timeline(Func<TimeSpan, TimeSpan?> timeTransformFromOutsideToInside) {
+        public Ani<double> Proper { get; private set; }
+        public Timeline(Func<TimeSpan, TimeSpan?> timeTransformFromOutsideToInside, Ani<double> proper) {
+            Things = new PerishableCollection<IControlDescription>();
             this._timeTransformFromOutsideToInside = timeTransformFromOutsideToInside;
-        }
-        public static Timeline Where(Func<TimeSpan, bool> predicate) {
-            return new Timeline(e => predicate(e) ? (TimeSpan?)e : null);
-        }
-        public static Timeline Limited(TimeSpan start, TimeSpan finish) {
-            return new Timeline(e => e < start || e > finish ? null : (TimeSpan?)(e - start));
-        }
-        public static Timeline Periodic(TimeSpan period) {
-            return new Timeline(e => e.Mod(period));
-        }
-        public static Timeline Dilated(TimeSpan oneSecond, TimeSpan zero = default(TimeSpan)) {
-            return new Timeline(e => ((e - zero).DividedBy(oneSecond)).Seconds());
+            this.Proper = proper;
         }
 
         public void Add(IControlDescription immortalThing) {
             Things.Add(immortalThing, Lifetime.Immortal);
+        }
+        public void Add(params IControlDescription[] immortalThing) {
+            foreach (var e in immortalThing)
+                Add(e);
         }
         public void Add(IEnumerable<IControlDescription> immortalThing) {
             foreach (var e in immortalThing)

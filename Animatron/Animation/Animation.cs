@@ -13,11 +13,12 @@ using TwistedOak.Util;
 using System.Linq;
 
 namespace Animatron {
-    public sealed class Animation : IEnumerable<Unit>, IControlDescription {
+    public sealed class Animation : IHasThings, IEnumerable<Unit>, IControlDescription {
         public readonly PerishableCollection<Action<Step>> StepActions = new PerishableCollection<Action<Step>>(); 
         public readonly PerishableCollection<UIElement> Controls = new PerishableCollection<UIElement>();
-        public readonly PerishableCollection<IControlDescription> Things = new PerishableCollection<IControlDescription>();
+        public PerishableCollection<IControlDescription> Things { get; private set; }
 
+        public Ani<double> Proper { get { return Ani.Anon(t => 1 - Math.Exp(-t.TotalSeconds)); } }
         public void LinkMany(IAni<IEnumerable<IControlDescription>> values, Lifetime life) {
             LinkMany(values, Things, life);
         }
@@ -66,6 +67,7 @@ namespace Animatron {
                 Add(e);
         }
         public Animation() {
+            Things = new PerishableCollection<IControlDescription>();
             Things.CurrentAndFutureItems().Subscribe(e => e.Value.Link(Controls, NextElapsedTime(), e.Lifetime));
         }
         public async Task Run(Lifetime life, TimeSpan? delayTime = default(TimeSpan?)) {
