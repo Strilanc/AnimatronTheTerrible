@@ -19,8 +19,13 @@ namespace Animatron {
             x.Things.Add(r, Lifetime.Immortal);
             return r;
         }
-        public static Timeline Limited(this IHasThings x, TimeSpan start, TimeSpan finish) {
-            var r = new Timeline(e => e < start || e >= finish ? null : (TimeSpan?)(e), Ani.Anon(t => (t - start).DividedBy(finish -start)));
+        public static Timeline LimitedSameTime(this IHasThings x, TimeSpan start, TimeSpan finish) {
+            var r = new Timeline(e => e < start || e >= finish ? null : (TimeSpan?)(e), Ani.Anon(t => (t - start).DividedBy(finish - start)));
+            x.Things.Add(r, Lifetime.Immortal);
+            return r;
+        }
+        public static Timeline LimitedNewTime(this IHasThings x, TimeSpan start, TimeSpan finish) {
+            var r = new Timeline(e => e < start || e >= finish ? null : (TimeSpan?)(e - start), Ani.Anon(t => (t - start).DividedBy(finish - start)));
             x.Things.Add(r, Lifetime.Immortal);
             return r;
         }

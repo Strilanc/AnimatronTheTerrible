@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
 
             var life = Lifetime.Immortal;
-            var animation = Animations.Unitaryness.CreateHadamardGateAnimation();
+            var animation = Animations.Unitaryness.CreateGroverDiffusionAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
