@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Animatron;
@@ -203,18 +202,19 @@ namespace Animations {
                                       ComplexMatrix u,
                                       Ani<Brush> or,
                                       Ani<Brush> bla) {
-            var d = Math.Min(pos.Width / (u.Columns.Count + 2), pos.Height / (u.Rows.Count + 2)) / 2;
+            var d = Math.Min(pos.Width / (u.Columns.Count +2), pos.Height / (u.Rows.Count)) / 2;
+            pos = new Rect(pos.TopLeft, new Size(d * (u.Columns.Count + 2) * 2, d * u.Rows.Count * 2));
             var ur = d;
             return new Animation {
-                new RectDesc(new Rect(pos.X + d*2, pos.Y + d*2, pos.Width - d*4, pos.Height - d*4),
+                new RectDesc(new Rect(pos.X + d*2, pos.Y, pos.Width - d*4, pos.Height),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
-                new RectDesc(new Rect(pos.X, pos.Y + d*2, d*2, pos.Height - d*4),
+                new RectDesc(new Rect(pos.X, pos.Y, d*2, pos.Height),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
-                new RectDesc(new Rect(pos.Right - d*2, pos.Y + d*2, d*2, pos.Height - d*4),
+                new RectDesc(new Rect(pos.Right - d*2, pos.Y, d*2, pos.Height),
                              Brushes.Black,
                              strokeThickness: 0.6,
                              dashed: 5),
@@ -225,7 +225,7 @@ namespace Animations {
                             or,
                             bla,
                             u.Rows[r][c],
-                            (pos.TopLeft + new Vector(d*3 + c*d*2, d*3 + r*d*2)),
+                            (pos.TopLeft + new Vector(d*3 + c*d*2, d + r*d*2)),
                             ur)))
             };
         }
@@ -347,7 +347,7 @@ namespace Animations {
 
             return animation;
         }
-        public static Animation CreateComplexProductAnimation(Lifetime life) {
+        public static Animation CreateComplexProductAnimation() {
             var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var c1 = new Complex(1, 1) / 2;
@@ -422,7 +422,7 @@ namespace Animations {
 
             return animation;
         }
-        public static Animation CreateComplexSumAnimation(Lifetime life) {
+        public static Animation CreateComplexSumAnimation() {
             var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var c1 = new Complex(-0.5, -0.5) * Math.Sqrt(0.5);
@@ -476,7 +476,7 @@ namespace Animations {
 
             return animation;
         }
-        public static Animation CreateComplexTransformationAnimation(Lifetime life) {
+        public static Animation CreateComplexTransformationAnimation() {
             var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
 
@@ -522,10 +522,9 @@ namespace Animations {
             return animation;
         }
 
-        public static Animation CreateHadamardGateAnimation(Lifetime life) {
+        public static Animation CreateHadamardGateAnimation() {
             var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
-            var animation = new Animation();
             var pow = 2;
             var v0 = new ComplexVector(new Complex[] {1, 0,0,0});
             var H = ComplexMatrix.MakeUnitaryHadamard(pow);
@@ -537,112 +536,92 @@ namespace Animations {
             var m2 = m/2;
             var x1 = 200;
             var x2 = 500;
-            animation.Things.Add(new LineSegmentDesc(new Point(50, 50 - 10).Sweep(new Vector(1000, 0))), life);
-            animation.Things.Add(new LineSegmentDesc(new Point(50, 50 + 10).Sweep(new Vector(1000, 0))), life);
-            animation.Things.Add(
-                new TextDesc("qbit0=1_",
-                             new Point(50, 50 - 10),
-                             new Point(1.0, 0.5)),
-                life);
-            animation.Things.Add(
-                new TextDesc("qbit1=_0",
-                             new Point(50, 50 + 10),
-                             new Point(1.0, 0.5)),
-                life);
+
             var t1 = 10.Seconds().Times((x1 - m2) / 600);
             var t2 = 10.Seconds().Times((x1 + m2 - w * 2) / 600);
             var t3 = 10.Seconds().Times((x2 - m2) / 600);
             var t4 = 10.Seconds().Times((x2 + m2 - w * 2) / 600);
             var t5 = 10.Seconds();
             var sw = Ani.Anon(t => new Point((t.TotalSeconds / 10).LerpTransition(0, 600), 0).Sweep(new Vector(0, 1000)));
-            animation.Things.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4), life);
-            animation.Things.Add(new RectDesc(new Rect(x1 - 25, 50 - 25, 50, 50), Brushes.Black, Brushes.White, 1.0), life);
-            animation.Things.Add(new TextDesc("H", new Point(x1, 50), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20), life);
-            animation.Things.Add(new RectDesc(new Rect(x2 - 25, 50 - 25, 50, 50), Brushes.Black, Brushes.White, 1.0), life);
-            animation.Things.Add(new TextDesc("H", new Point(x2, 50), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20), life);
-            foreach (var j in v0.Values.Count.Range()) {
-                animation.Things.Add(
-                    new TextDesc("|" + Convert.ToString(j, 2).PadLeft(pow, '0') + ">",
-                                 sw.Select(e => new Point(0, 100 + w*3) + new Vector(0, j*w*2)),
-                                 new Point(0.0, 0.5)),
-                    life);
-            }
+
+            var animation = new Animation {
+                new LineSegmentDesc(new Point(50, 50 - 10).Sweep(new Vector(1000, 0))),
+                new LineSegmentDesc(new Point(50, 50 + 10).Sweep(new Vector(1000, 0))),
+                new TextDesc("qbit0=1_", new Point(50, 50 - 10), new Point(1.0, 0.5)),
+                new TextDesc("qbit1=_0", new Point(50, 50 + 10), new Point(1.0, 0.5)),
+                new LineSegmentDesc(sw, Brushes.Red, 0.5, 4),
+                new RectDesc(new Rect(x1 - 25, 50 - 25, 50, 50), Brushes.Black, Brushes.White, 1.0),
+                new TextDesc("H", new Point(x1, 50), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
+                new RectDesc(new Rect(x2 - 25, 50 - 25, 50, 50), Brushes.Black, Brushes.White, 1.0),
+                new TextDesc("H", new Point(x2, 50), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
+                v0.Values.Count.Range().Select(
+                    j => new TextDesc("|" + Convert.ToString(j, 2).PadLeft(pow, '0') + ">",
+                                      sw.Select(e => new Point(0, 100 + w*3) + new Vector(0, j*w*2)),
+                                      new Point(0.0, 0.5)))
+            };
             
             var period = animation.Periodic(10.Seconds());
             var t01 = period.Limited(0.Seconds(), t1);
             var t03 = period.Limited(0.Seconds(), t3);
+            var t12 = period.Limited(t1, t2);
             var t23 = period.Limited(t2, t3);
             var t25 = period.Limited(t2, t5);
+            var t35 = period.Limited(t3, t5);
             var t45 = period.Limited(t4, t5);
+            var m1 = ShowMatrix(new Rect(x1 - m2, 100, m2*2, m2*2),
+                                H,
+                                matrixFill,
+                                Brushes.Black);
+            t01.Add(m1);
+            t25.Add(m1);
+            var mat2 = ShowMatrix(new Rect(x2 - m2, 100, m2*2, m2*2),
+                                  H,
+                                  matrixFill,
+                                  Brushes.Black);
+            t03.Add(mat2);
+            t45.Add(mat2);
+            t12.Add(
+                ShowMatrixMultiplication(
+                        t2-t1,
+                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
+                        H,
+                        v0,
+                        matrixFill,
+                        vectorFill,
+                        Brushes.Black));
+            t35.Add(
+                ShowMatrixMultiplication(
+                    t5 - t3,
+                    new Rect(x2 - m2, 100, m2*2, m2*2),
+                    H,
+                    v1,
+                    matrixFill,
+                    vectorFill,
+                    Brushes.Black));
+
+            // show vector being 'pushed' by sweep line
             t01.Add(v0.Values.Count.Range().Select(
                 j => ShowComplex(
                     vectorFill,
                     Brushes.Black,
                     v0.Values[j],
-                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w*3) + new Vector(0, j*w*2)),
+                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
                     w)));
-            t01.Add(ShowMatrix(new Rect(x1 - m2, 100, m2*2, m2*2),
-                               H,
-                               matrixFill,
-                               Brushes.Black));
-            t25.Add(ShowMatrix(new Rect(x1 - m2, 100, m2*2, m2*2),
-                               H,
-                               matrixFill,
-                               Brushes.Black));
-            t03.Add(ShowMatrix(new Rect(x2 - m2, 100, m2*2, m2*2),
-                               H,
-                               matrixFill,
-                               Brushes.Black));
-            t45.Add(ShowMatrix(new Rect(x2 - m2, 100, m2*2, m2*2),
-                               H,
-                               matrixFill,
-                               Brushes.Black));
-            //animation.HideShow(
-            //    t5,
-            //    t1,
-            //    t2 - t1,
-            //    (li, tt) => animation.Things.Add(
-            //        ShowMatrixMultiplication(
-            //            tt,
-            //            new Rect(x1 - m2, 100, m2*2, m2*2),
-            //            H,
-            //            v0,
-            //            matrixFill,
-            //            vectorFill,
-            //            Brushes.Green.LerpToTransparent(0.5),
-            //            Brushes.Black),
-            //        li),
-            //    life);
-            //animation.HideShow(
-            //    t5,
-            //    t3,
-            //    t4 - t3,
-            //    (li, tt) => animation.Things.Add(
-            //        ShowMatrixMultiplication(
-            //            tt,
-            //            new Rect(x2 - m2, 100, m2*2, m2*2),
-            //            H,
-            //            v1,
-            //            matrixFill,
-            //            vectorFill,
-            //            Brushes.Green.LerpToTransparent(0.5),
-            //            Brushes.Black),
-            //        li),
-            //    life);
             t23.Add(v1.Values.Count.Range().Select(
                 j => ShowComplex(
                     vectorFill,
                     Brushes.Black,
                     v1.Values[j],
-                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w*3) + new Vector(0, j*w*2)),
+                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j*w*2)),
                     w)));
             t45.Add(v2.Values.Count.Range().Select(
                 j => ShowComplex(
                     vectorFill,
                     Brushes.Black,
                     v2.Values[j],
-                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w*3) + new Vector(0, j*w*2)),
+                    sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j*w*2)),
                     w)));
+
             return animation;
         }
     }
