@@ -61,6 +61,8 @@ namespace Animatron {
             });
         }
         public static double SmoothLerpTo(this double from, double to, double p) {
+            if (p < 0.01) return from;
+            if (p > 0.99) return to;
             p = p*2 - 1;
             p *= 1.5;
             var s = p / Math.Sqrt(Math.Sqrt(Math.Sqrt(1 + Math.Pow(p, 8))));
@@ -102,22 +104,23 @@ namespace Animatron {
         public static byte LerpTo(this byte from, byte to, double p) {
             return from.Proportion().LerpTo(to.Proportion(), p).ToProportionalByte();
         }
-        public static string ToPrettyString(this Complex c) {
+        public static string ToPrettyString(this Complex c, string f = null) {
+            f = f ?? "0.###";
             var r = c.Real;
             var i = c.Imaginary;
-            if (i == 0) return String.Format("{0:0.###}", r);
-            if (r == 0)
+            if (Math.Abs(i) < 0.0001) return r.ToString(f);
+            if (Math.Abs(r) < 0.0001)
                 return i == 1 ? "i"
                      : i == -1 ? "-i"
-                     : String.Format("{0:0.###}i", i);
+                     : i.ToString(f)+"i";
             return String.Format(
-                "{0:0.###}{1}{2}",
-                r == 0 ? (object)"" : r,
+                "{0}{1}{2}",
+                r == 0 ? "" : r.ToString(f),
                 i < 0 ? "-" : "+",
-                i == 1 || i == -1 ? "i" : String.Format("{0:0.###}i", Math.Abs(i)));
+                i == 1 || i == -1 ? "i" : Math.Abs(i).ToString(f)+"i");
         }
-        public static string ToMagPhaseString(this Complex c) {
-            return string.Format("√{0:0.##} ⋅ ∠{1:0}°", c.Magnitude * c.Magnitude, Math.Round(c.Phase * 180 / Math.PI));
+        public static string ToMagPhaseString(this Complex c, string af = null, string pf = null) {
+            return string.Format("√{0} ⋅ ∠{1}°", (c.Magnitude * c.Magnitude).ToString(af ?? "0.##"), (c.Phase * 180 / Math.PI).ToString(pf ?? "0.#"));
         }
         public static SolidColorBrush LerpToTransparent(this SolidColorBrush start, double p) {
             if (p <= 0) return start;

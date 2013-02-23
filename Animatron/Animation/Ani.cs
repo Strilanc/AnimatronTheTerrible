@@ -37,6 +37,7 @@ namespace Animatron {
     }
 
     public static class Ani {
+        public static Ani<TimeSpan> Time { get { return Anon(e => e); } }
         public static Ani<T> Anon<T>(this Func<TimeSpan, T> func) {
             return new AnonymousAni<T>(func);
         }
@@ -50,6 +51,9 @@ namespace Animatron {
             return ani.Select(r => r.Select(projection));
         }
         public static Ani<TOut> Combine<TIn1, TIn2, TOut>(this Ani<TIn1> ani, Ani<TIn2> ani2, Func<TIn1, TIn2, TOut> projection) {
+            if (ani == null) throw new ArgumentNullException("ani");
+            if (ani2 == null) throw new ArgumentNullException("ani2");
+            if (projection == null) throw new ArgumentNullException("projection");
             return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t)));
         }
         public static Ani<TOut> Combine<TIn1, TIn2, TIn3, TOut>(this Ani<TIn1> ani, Ani<TIn2> ani2, Ani<TIn3> ani3, Func<TIn1, TIn2, TIn3, TOut> projection) {

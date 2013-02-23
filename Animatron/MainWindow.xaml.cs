@@ -13,6 +13,7 @@ using System.Linq;
 namespace Animatron {
     public partial class MainWindow {
         public MainWindow() {
+
             //using (var f = File.Open("C:\\Users\\Craig\\Documents\\GifRecordings\\634965148361216632.gif", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)) {
             //    using (var f2 = File.Open("C:\\Users\\Craig\\Documents\\GifRecordings\\LOOP634965148361216632.gif",
             //                           FileMode.OpenOrCreate,
@@ -26,7 +27,7 @@ namespace Animatron {
             //return;
 
             var life = Lifetime.Immortal;
-            var animation = Animations.Unitaryness.Animate(life);
+            var animation = Animations.Unitaryness.CreateHadamardGateAnimation(life);
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
@@ -76,10 +77,14 @@ namespace Animatron {
             
             var encoder = new GifBitmapEncoder();
             recording.SkipWhile(e => !e).DistinctUntilChanged().Where(e => !e).Subscribe(e => {
-                using (var f = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
-                    encoder.Save(f);
-                    //f.AdjustEncodedGif(stepdt);
-                    encoder = new GifBitmapEncoder();
+                using (var f1 = new MemoryStream()) {
+                    using (var f2 = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
+                        encoder.Save(f1);
+                        encoder = new GifBitmapEncoder();
+                        f1.Flush();
+                        f1.Position = 0;
+                        f1.LoopGif(f2);
+                    }
                 }
             });
 
@@ -117,7 +122,7 @@ namespace Animatron {
             f.WriteByte((byte)(value & 0xFF));
             f.WriteByte((byte)((value>>8) & 0xFF));
         }
-        public static void LoopGif(this FileStream input, FileStream output) {
+        public static void LoopGif(this Stream input, FileStream output) {
             // copy header over
             for (var i = 0; i < 13; i++) {
                 var b = (byte)input.ReadByte();
