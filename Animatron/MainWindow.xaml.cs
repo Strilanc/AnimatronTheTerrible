@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
 
             var life = Lifetime.Immortal;
-            var animation = Animations.Unitaryness.CreateGroverDiffusionAnimation();
+            var animation = Animations.Unitaryness.CreateFullGroverAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
@@ -49,7 +49,6 @@ namespace Animatron {
                             return;
                         }
                     }
-                    txtPath.IsEnabled = false;
                     this.ResizeMode = ResizeMode.NoResize;
                     btnRecord.Content = "Stop Recording";
                     Properties.Settings.Default.focusHeight = Math.Max(50, this.ActualHeight);
@@ -60,36 +59,45 @@ namespace Animatron {
                     isRecording.Update(false);
                     this.ResizeMode = ResizeMode.CanResize;
                     btnRecord.Content = "Start Recording";
-                    txtPath.IsEnabled = true;
                 }
             };
 
             this.Loaded += (sender, arg) => {
                 animation.LinkToCanvas(canvas, life);
-                RunWithPotentialRecording(animation, isRecording);
+                RunWithPotentialRecording(animation, isRecording, frameTime: 50.Milliseconds(), startTime: 100.Milliseconds(), stopTime: 100.Milliseconds() + 5.Seconds().DividedBy(3));
                 this.Width = Math.Max(50, Properties.Settings.Default.focusWidth);
                 this.Height = Math.Max(50, Properties.Settings.Default.focusHeight);
             };
         }
 
-        private async Task RunWithPotentialRecording(Animation animation, IObservableLatest<bool> recording, TimeSpan? frameTime = null) {
+        private async Task RunWithPotentialRecording(Animation animation, IObservableLatest<bool> recording, TimeSpan? frameTime = null, TimeSpan? startTime = null, TimeSpan? stopTime = null) {
+            var forceRecording = new ObservableValue<bool?>();
             var stepdt = frameTime ?? 50.Milliseconds();
-            
+
             var encoder = new GifBitmapEncoder();
-            recording.SkipWhile(e => !e).DistinctUntilChanged().Where(e => !e).Subscribe(e => {
-                using (var f1 = new MemoryStream()) {
-                    using (var f2 = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
-                        encoder.Save(f1);
-                        encoder = new GifBitmapEncoder();
-                        f1.Flush();
-                        f1.Position = 0;
-                        f1.LoopGif(f2);
+            recording.CombineLatest(forceRecording, (v1, f) => f ?? v1).SkipWhile(e => !e).DistinctUntilChanged().Subscribe(e => {
+                if (!e) {
+                    using (var f1 = new MemoryStream()) {
+                        using (var f2 = new FileStream(Path.Combine(txtPath.Text, DateTime.Now.Ticks + ".gif"), FileMode.CreateNew)) {
+                            encoder.Save(f1);
+                            encoder = new GifBitmapEncoder();
+                            f1.Flush();
+                            f1.Position = 0;
+                            f1.LoopGif(f2);
+                        }
                     }
                 }
+                txtPath.IsEnabled = !e;
             });
 
             for (var t = 0.Seconds(); t < 500.Seconds(); t += stepdt) {
-                if (recording.Current) {
+                if (startTime.HasValue && t - stepdt < startTime.Value && t >= startTime.Value) {
+                    forceRecording.Update(true);
+                }
+                if (stopTime.HasValue && t - stepdt < stopTime.Value && t >= stopTime.Value) {
+                    forceRecording.Update(null);
+                }
+                if (forceRecording.Current ?? recording.Current) {
                     var rtb = new RenderTargetBitmap(
                         (int)Math.Floor(canvas.ActualWidth),
                         (int)Math.Floor(canvas.ActualHeight),
@@ -107,7 +115,7 @@ namespace Animatron {
                 foreach (var e in animation.StepActions.CurrentItems())
                     e.Value.Invoke(step);
 
-                await Task.Delay(stepdt);
+                await Task.Delay(stepdt.Times(10));
             }
         }
     }

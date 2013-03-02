@@ -21,7 +21,8 @@ namespace SnipSnap.Mathematics {
         public static T Min<T>(this T value1, T value2) where T : IComparable<T> {
             return value1.CompareTo(value2) <= 0 ? value1 : value2;
         }
-        public static IEnumerable<R> Stream<R, T>(this IEnumerable<T> items, R seed, Func<R, T, R> aggregator) {
+        public static IEnumerable<R> Stream<R, T>(this IEnumerable<T> items, R seed, Func<R, T, R> aggregator, bool streamSeed = false) {
+            if (streamSeed) yield return seed;
             foreach (var e in items) {
                 yield return seed = aggregator(seed, e);
             }
