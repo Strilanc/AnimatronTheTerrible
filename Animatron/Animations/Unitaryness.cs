@@ -1337,7 +1337,6 @@ namespace Animations {
             return animation;
         }
         public static Animation CreateFullGroverAnimation() {
-            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var H = ComplexMatrix.MakeUnitaryHadamard(3);
             var I2 = ComplexMatrix.FromCellData(
@@ -1361,133 +1360,264 @@ namespace Animations {
                  0, 0, 0, 0, 0, 0, 0, 1);
             var S = U*D;
 
-            var ops = new[] {H, S, S};
-            var ins = new[] {
-                new ComplexVector(new Complex[] {1, 0, 0, 0, 0, 0, 0, 0}),
-                new ComplexVector(new Complex[] {1, 0, 0, 0, 0, 0, 0, 0}),
-                new ComplexVector(new Complex[] {1, 0, 0, 0, 0, 0, 0, 0})
+            var GS = new CircuitOperationWithStyle {
+                Description = "Grover Step",
+                MinWire = 0,
+                MaxWire = 2,
+                Operation = S,
+                Width = 80,
+                WireHints=new[] {"Off","On","On"}
             };
-            var vals = ins.Select(e => ops.Stream(e, (a, x) => a*x, streamSeed: true).ToArray()).ToArray();
+            return CreateCircuitAnimation(
+                new[] {
+                    new CircuitOperationWithStyle {
+                        Description="H",
+                        MinWire=0,
+                        MaxWire=2,
+                        Operation=H,
+                        Width=80
+                    },
+                    GS,
+                    GS
+                },
+                ReadOnlyList.Repeat(
+                    new CircuitInputWithStyle {
+                        Value = new ComplexVector(new Complex[] {1, 0, 0, 0, 0, 0, 0, 0}),
+                        Color = vectorFill
+                    },
+                    4),
+                "Grover's Algorithm");
+        }
+        public static Animation CreateInterferometerAnimation() {
+            var s = Math.Sqrt(0.5);
+            var z = s*Complex.ImaginaryOne;
+            var splitter = ComplexMatrix.FromCellData(
+                s, z,
+                z, s);
+            var mirror = ComplexMatrix.MakeIdentity(2)*Complex.ImaginaryOne;
 
-            var m = 150.0;
-            var w = m / (vals[0][0].Values.Count + 2) / 2;
-            var m2 = m / 2;
-            var span = 700;
-            var xs = 3.Range().Select(i => 100 + span*i/3.0).ToArray();
+            return CreateCircuitAnimation(
+                new[] {
+                    new CircuitOperationWithStyle {
+                        Description = "Splitter",
+                        MaxWire = 0,
+                        MinWire = 0,
+                        Operation = splitter,
+                        Width = 80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description = "Mirror",
+                        MaxWire = 0,
+                        MinWire = 0,
+                        Operation = mirror,
+                        Width = 80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description = "Splitter",
+                        MaxWire = 0,
+                        MinWire = 0,
+                        Operation = splitter,
+                        Width = 80
+                    }
+                },
+                ReadOnlyList.Repeat(
+                    new CircuitInputWithStyle {
+                        Value = new ComplexVector(new Complex[] {1, 0}),
+                        Color = Brushes.Blue.LerpToTransparent(0.7)
+                    },
+                    4),
+                "Mach–Zehnder Interferometer",
+                new[] {
+                    new[] {"A", "B"},
+                    new[] {"C", "D"},
+                    new[] {"E", "F"},
+                    new[] {"G", "H"}
+                });
+        }
+        public static double SquaredMagnitude(this Complex c) {
+            return c.Real*c.Real + c.Imaginary*c.Imaginary;
+        }
+        public struct CircuitInputWithStyle {
+            public ComplexVector Value;
+            public Brush Color;
+        }
+        public struct CircuitOperationWithStyle {
+            public ComplexMatrix Operation;
+            public string Description;
+            public string[] WireHints;
+            public int MinWire;
+            public int MaxWire;
+            public double Width;
+        }
+        public static Animation CreateCircuitAnimation(IReadOnlyList<CircuitOperationWithStyle> ops, IReadOnlyList<CircuitInputWithStyle> ins, string desc, string[][] wireLabels = null, string[] stateLabels = null) {
+            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
 
-            var duration = 5.Seconds();
-            var sw = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-w * 2, span - w * 2), 0).Sweep(new Vector(0, 1000)));
-            var ts = xs.Select(x => new {s = duration.Times((x - m2 + w*2)/span), f = duration.Times((x + m2)/span)}).ToArray();
+            var vals = ins.Select(e => ops.Stream(e.Value, (a, x) => a*x.Operation, streamSeed: true).ToArray()).ToArray();
 
-            var wireYs = new[] {40, 60, 80};
+            var numOp = ops.Count;
+            var numIn = ins.Count;
+            var maxIn = numOp + 1;
+            var numState = ins.First().Value.Values.Count;
+            var numWire = (int)Math.Round(Math.Log(numState, 2));
+            var matrixWidth = 150.0;
+            var cellRadius = matrixWidth / (vals[0][0].Values.Count + 2) / 2;
+            var matrixRadius = matrixWidth / 2;
+            var span = 800;
+            var opXs = numOp.Range().Select(i => -cellRadius+span*(i+1.0)/maxIn).ToArray();
+
+            var duration = 20.Seconds();
+            var sweepX = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-cellRadius * 2, span - cellRadius * 2), 0).Sweep(new Vector(0, 1000)));
+            var opTs = opXs.Select(x => new {s = duration.Times((x - matrixRadius + cellRadius*2)/span), f = duration.Times((x + matrixRadius)/span)}).ToArray();
+
+            var wireYs = numWire.Range().Select(i => numWire == 1 ? 60 : (40 + i * 40.0 / (numWire - 1))).ToArray();
             var animation = new Animation {
-                new TextDesc("Grover's Algorithm",
-                             new Point((xs[0]+xs[2])/2.0, 5),
+                // top description
+                new TextDesc(desc,
+                             new Point((opXs[0]+opXs[2])/2.0, 5),
                              new Point(0.5, 0),
                              fontSize: 15,
                              foreground: Brushes.Gray),
-                // wire
-                wireYs.Select(y => new LineSegmentDesc(new Point(0, y).Sweep(new Vector(1000, 0))))
+                // wires
+                wireYs.Select(y => new LineSegmentDesc(new Point(0, y).Sweep(new Vector(1000, 0)))),
+                // static matrices
+                numOp.Range()
+                     .Select(i => ShowMatrix(
+                         new Rect(opXs[i] - matrixRadius, 100, matrixRadius*2, matrixRadius*2),
+                         ops[i].Operation,
+                         matrixFill,
+                         Brushes.Black))
             };
 
-            var pers = new[] {
-                animation.Periodic(duration),
-                animation.Dilated(1.Seconds(), zero: duration.DividedBy(3)).Periodic(duration),
-                animation.Dilated(1.Seconds(), zero: duration.DividedBy(3).Times(2)).Periodic(duration)
-            };
-            var halfPeriod = animation.Periodic(duration.DividedBy(3));
+            var offsetTimelines =
+                maxIn.Range()
+                     .Select(
+                         i => animation
+                                  .Dilated(
+                                      1.Seconds(),
+                                      -duration.DividedBy(maxIn).Times(i))
+                                  .Periodic(duration))
+                     .ToArray();
 
             // sweep line
-            foreach (var p in pers) {
-                p.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
+            foreach (var p in offsetTimelines.Take(numIn)) {
+                p.Add(new LineSegmentDesc(sweepX, Brushes.Red, 0.5, 4));
             }
 
-            // matrices (not shown during multiplication)
-            var xx = halfPeriod.LimitedSameTime(0.Seconds(), ts[0].s);
-            var xx2 = halfPeriod.LimitedSameTime(ts[0].f, ts[1].s);
-            var xx3 = halfPeriod.LimitedSameTime(ts[1].f, ts[2].s);
-            var mmmm = xs.Count().Range().Select(i => ShowMatrix(new Rect(xs[i] - m2, 100, m2 * 2, m2 * 2),
-                                ops[i],
-                                matrixFill,
-                                Brushes.Black));
-            foreach (var xxx in new[] { xx, xx2, xx3 }) {
-                foreach (var mmm in mmmm) {
-                    xxx.Add(mmm);
+            // state labels
+            var tts = opTs.Select(e => e.s.LerpTo(e.f, 0.4));
+            var wd = numIn.Range().Select(inid => numWire.Range().Select(wid => (numOp + 1).Range().Select(tid => {
+                var label = wireLabels == null ? new[] {"On", "Off"} : wireLabels[tid];
+                var p = numState.Range().Where(i => ((i >> wid) & 1) == 0).Select(i => vals[inid][tid].Values[i].SquaredMagnitude()).Sum();
+                if (p < 0.001) return label[1];
+                if (p < 0.01) return string.Format("~{0}", label[1]);
+                if (p < 0.49) return string.Format("~{0}:{1:0}%", label[1], (1 - p) * 100);
+
+                if (p > 0.999) return label[0];
+                if (p > 0.99) return string.Format("~{0}", label[0]);
+                if (p > 0.51) return string.Format("~{0}:{1:0}%", label[0], p * 100);
+
+                return string.Format("{0}/{1}", label[0], label[1]);
+            }).ToArray()).ToArray()).ToArray();
+            foreach (var i in numIn.Range()) {
+                foreach (var j in numWire.Range()) {
+                    animation.Add(
+                        new TextDesc(
+                            Ani.Anon(t => (t + duration.DividedBy(maxIn).Times(i)).Mod(duration))
+                               .Select(t => wd[i][j][tts.TakeWhile(c => t >= c).Count()]),
+                            Ani.Anon(
+                                t =>
+                                new Point((t.DividedBy(duration) + i * 1.0 / maxIn).ProperMod(1).LerpTransition(-cellRadius * 2, span - cellRadius * 2), wireYs[j]))));
                 }
-            }
-
-            var tts = ts.Select(e => e.s.LerpTo(e.f, 0.4));
-            foreach (var i in 3.Range()) {
-                animation.Add(new TextDesc(
-                    Ani.Anon(t => (t + duration.DividedBy(3).Times(i)).Mod(duration)).Select(t => t < tts[0] ? "On" : t < tts[1] ? "Mixed" : t < tts[2] ? "Mixed[~off]" : "~off"),
-                    Ani.Anon(t => new Point((t.DividedBy(duration) + i / 3.0).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireYs[0]))));
-
-                animation.Add(new TextDesc(
-                    Ani.Anon(t => (t + duration.DividedBy(3).Times(i)).Mod(duration)).Select(t => t < tts[0] ? "On" : t < tts[1] ? "Mixed" : t < tts[2] ? "Mixed[~on]" : "~on"),
-                    Ani.Anon(t => new Point((t.DividedBy(duration) + i / 3.0).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireYs[1]))));
-                
-                animation.Add(new TextDesc(
-                    Ani.Anon(t => (t + duration.DividedBy(3).Times(i)).Mod(duration)).Select(t => t < tts[0] ? "On" : t < tts[1] ? "Mixed" : t < tts[2] ? "Mixed[~on]" : "~on"),
-                    Ani.Anon(t => new Point((t.DividedBy(duration) + i / 3.0).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireYs[2]))));
             }
 
             // matrix multiplications
-            foreach (var i in 3.Range()) {
-                foreach (var j in 3.Range()) {
-                    pers[i].LimitedNewTime(ts[j].s, ts[j].f).Add(
+            foreach (var i in numIn.Range()) {
+                foreach (var j in numOp.Range()) {
+                    var p = offsetTimelines[i].LimitedNewTime(opTs[j].s, opTs[j].f);
+                    var r = new Rect(opXs[j] - matrixRadius, 100, matrixRadius*2, matrixRadius*2);
+                    p.Add(
                         ShowMatrixMultiplication(
-                            ts[j].f - ts[j].s,
-                            new Rect(xs[j] - m2, 100, m2 * 2, m2 * 2),
-                            ops[j],
+                            opTs[j].f - opTs[j].s,
+                            r,
+                            ops[j].Operation,
                             vals[i][j],
                             matrixFill,
-                            vectorFill,
+                            ins[i].Color,
                             Brushes.Black));
                 }
-
-                pers[i].LimitedSameTime(0.Seconds(), ts[0].s).Add(vals[i][0].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        vals[i][0].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                pers[i].LimitedSameTime(ts[0].f, ts[1].s).Add(vals[i][1].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        vals[i][1].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                pers[i].LimitedSameTime(ts[1].f, ts[2].s).Add(vals[i][2].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        vals[i][2].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                pers[i].LimitedSameTime(ts[2].f, duration).Add(vals[i][3].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        vals[i][3].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
             }
 
-            animation.Add(new Animation {
-                // left hadamard gate
-                new RectDesc(new Rect(xs[0] - 30, wireYs[1] - 35, 60, 70), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(xs[0], wireYs[1]), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                // center operation
-                new RectDesc(new Rect(xs[1] - 40, wireYs[1] - 35, 80, 70), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("Step", new Point(xs[1], wireYs[1]), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                new TextDesc("1:off,2:on,3:on", new Point(xs[1], wireYs[2]), new Point(0.5, 0.5), fontSize: 10, foreground: Brushes.Gray),
-                // right hadamard gate
-                new RectDesc(new Rect(xs[2] - 40, wireYs[1] - 35, 80, 70), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("Step", new Point(xs[2], wireYs[1]), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                new TextDesc("1:off,2:on,3:on", new Point(xs[2], wireYs[2]), new Point(0.5, 0.5), fontSize: 10, foreground: Brushes.Gray),
-            });
+            // pushed values
+            foreach (var i in numIn.Range()) {
+                foreach (var s in maxIn.Range()) {
+                    var p = offsetTimelines[i].LimitedSameTime(s == 0 ? 0.Seconds() : opTs[s - 1].f, s == maxIn - 1 ? duration : opTs[s].s);
+                    p.Add(numState.Range().Select(
+                        j => ShowComplex(
+                            ins[i].Color,
+                            Brushes.Black,
+                            vals[i][s].Values[j],
+                            sweepX.Select(e => new Point(e.LerpAcross(0.3).X + cellRadius, 100 + cellRadius) + new Vector(0, j * cellRadius * 2)),
+                            cellRadius)));
+                }
+            }
+
+            // state labels
+            wireLabels = wireLabels ?? Enumerable.Repeat(new[] { "On", "Off" }, maxIn).ToArray();
+            stateLabels = stateLabels
+                          ?? numState
+                                 .Range()
+                                 .Select(
+                                     i => wireLabels
+                                              .Distinct()
+                                              .Select(
+                                                  t => numWire
+                                                           .Range()
+                                                           .Select(w => t[(i >> w) & 1])
+                                                           .StringJoin(""))
+                                              .StringJoin(""))
+                                 .ToArray();
+            foreach (var i in numState.Range()) {
+                animation.Add(
+                    new TextDesc(
+                        stateLabels[i] + ":",
+                        new Point(0, 100 + cellRadius + i*2*cellRadius),
+                        new Point(0, 0.5)));
+            }
+
+            // circuit diagram
+            foreach (var i in numOp.Range()) {
+                var op = ops[i];
+                var h = (numWire == 1 ? 40 : wireYs[1] - wireYs[0]) * (op.MaxWire - op.MinWire + 1);
+                var r = new Rect(
+                    opXs[i] - op.Width/2,
+                    (wireYs[op.MaxWire] + wireYs[op.MinWire] - h)/2,
+                    op.Width,
+                    h);
+                animation.Add(
+                    new RectDesc(
+                        r,
+                        Brushes.Black,
+                        Brushes.White,
+                        1.0));
+                animation.Add(
+                    new TextDesc(
+                        op.Description,
+                        r.TopLeft + new Vector(r.Width, r.Height) / 2,
+                        new Point(0.5, 0.5),
+                        fontWeight: FontWeights.ExtraBold,
+                        fontSize: 20));
+                if (op.WireHints != null) {
+                    foreach (var j in op.WireHints.Length.Range()) {
+                        animation.Add(
+                            new TextDesc(
+                                op.WireHints[j],
+                                new Point(r.Left, wireYs[op.MinWire + j]),
+                                new Point(0, 0.5),
+                                foreground: Brushes.Gray,
+                                fontSize: 10));
+                    }
+                }
+            }
 
             return animation;
         }

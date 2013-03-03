@@ -23,6 +23,11 @@ public struct ComplexMatrix {
         var cols = cells.Deinterleave(size);
         return FromColumns(cols);
     }
+    public static ComplexMatrix MakeIdentity(int power) {
+        return FromCellData((from i in power.Range()
+                             from j in power.Range()
+                             select i == j ? Complex.One : 0).ToArray());
+    }
     public static ComplexMatrix MakeHadamard(int power) {
         if (power == 0) return FromCellData(1);
         var h = MakeHadamard(power - 1);

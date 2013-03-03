@@ -115,7 +115,7 @@ namespace Animatron {
                 foreach (var e in animation.StepActions.CurrentItems())
                     e.Value.Invoke(step);
 
-                await Task.Delay(stepdt.Times(10));
+                await Task.Delay(stepdt);
             }
         }
     }
