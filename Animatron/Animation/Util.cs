@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Media;
 using SnipSnap.Mathematics;
 using Strilanc.Angle;
+using Strilanc.LinqToCollections;
 using Strilanc.Value;
 using TwistedOak.Collections;
 using TwistedOak.Element.Env;
@@ -14,6 +15,9 @@ using TwistedOak.Util;
 
 namespace Animatron {
     public static class Util {
+        public static IReadOnlyList<T> Repeat<T>(this T item, int count) {
+            return ReadOnlyList.Repeat(item, count);
+        } 
         public static Timeline Where(this IHasThings x, Func<TimeSpan, bool> f) {
             var r = new Timeline(e => f(e) ? (TimeSpan?)e : null, x.Proper);
             x.Things.Add(r, Lifetime.Immortal);

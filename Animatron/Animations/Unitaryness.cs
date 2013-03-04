@@ -351,19 +351,25 @@ namespace Animations {
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var c1 = new Complex(1, 1) / 2;
             var c2 = new Complex(-1, 1) / 2;
+            var r = 50;
+            var cy = 100;
+            var x1 = 125 / 2;
+            var x2 = 350 / 2;
+            var x3 = x2 + (x2 - x1);
+            var f = 14;
 
             var animation = new Animation {
-                new TextDesc("*", new Point((125 + 350)/2.0, 150), new Point(0.5, 0.5), fontSize: 20),
-                new TextDesc("=", new Point((575 + 350)/2.0, 150), new Point(0.5, 0.5), fontSize: 20),
-                new TextDesc(c1.ToPrettyString(), new Point(125, 150 - 100), new Point(0.5, 1), fontSize: 20),
-                new TextDesc(c2.ToPrettyString(), new Point(350, 150 - 100), new Point(0.5, 1), fontSize: 20),
-                new TextDesc((c1*c2).ToPrettyString(), new Point(575, 150 - 100), new Point(0.5, 1), fontSize: 20),
+                new TextDesc("*", new Point((x1 + x2)/2.0, cy), new Point(0.5, 0.5), fontSize: 20),
+                new TextDesc("=", new Point((x3 + x2)/2.0, cy), new Point(0.5, 0.5), fontSize: 20),
+                new TextDesc(c1.ToPrettyString(), new Point(x1, cy - r), new Point(0.5, 1), fontSize: f),
+                new TextDesc(c2.ToPrettyString(), new Point(x2, cy - r), new Point(0.5, 1), fontSize: f),
+                new TextDesc((c1*c2).ToPrettyString(), new Point(x3, cy - r), new Point(0.5, 1), fontSize: f),
 
-                new TextDesc(c1.ToMagPhaseString(), new Point(125, 150 + 100), new Point(0.5, 0), fontSize: 20),
-                new TextDesc(c2.ToMagPhaseString(), new Point(350, 150 + 100), new Point(0.5, 0), fontSize: 20),
-                new TextDesc((c1*c2).ToMagPhaseString(), new Point(575, 150 + 100), new Point(0.5, 0), fontSize: 20),
-                new TextDesc("Multiplying Complex Numbers: Multiply Magnitudes, Add Phases",
-                             new Point(350, 5),
+                new TextDesc(c1.ToMagPhaseString(), new Point(x1, cy + r), new Point(0.5, 0), fontSize: f),
+                new TextDesc(c2.ToMagPhaseString(), new Point(x2, cy + r), new Point(0.5, 0), fontSize: f),
+                new TextDesc((c1*c2).ToMagPhaseString(), new Point(x3, cy + r), new Point(0.5, 0), fontSize: f),
+                new TextDesc("Complex Product: Multiply Magnitudes, Add Phases",
+                             new Point(x2, 5),
                              new Point(0.5, 0),
                              fontSize: 15,
                              foreground: Brushes.Gray),
@@ -371,13 +377,13 @@ namespace Animations {
                 ShowComplex(vectorFill,
                             Brushes.Black,
                             c1,
-                            new Point(125, 150),
-                            100),
+                            new Point(x1, cy),
+                            r),
                 ShowComplex(matrixFill,
                             Brushes.Black,
                             c2,
-                            new Point(350, 150),
-                            100)
+                            new Point(x2, cy),
+                            r)
             };
 
             var p = animation.Dilated(0.4.Seconds()).Periodic(10.Seconds());
@@ -387,18 +393,18 @@ namespace Animations {
                                c1,
                                Ani.Anon(
                                    t =>
-                                   new Point(125, 150).SmoothLerpTo(new Point(575, 150), (s1.Proper.ValueAt(t)*1.5).Min(1))
+                                   new Point(x1, cy).SmoothLerpTo(new Point(x3, cy), (s1.Proper.ValueAt(t)*1.5).Min(1))
                                    + new Vector(0, (s1.Proper.ValueAt(t)*1.5).Min(1).LerpTransition(0, -25, 0))),
-                               100,
+                               r,
                                rotation: Ani.Anon(t => Turn.FromNaturalAngle(0.0.SmoothLerpTo(Math.PI/2, (s1.Proper.ValueAt(t)*2).Min(1))))));
             s1.Add(ShowComplex(matrixFill,
                                Brushes.Black,
                                c2,
                                Ani.Anon(
                                    t =>
-                                   new Point(350, 150).SmoothLerpTo(new Point(575, 150), (s1.Proper.ValueAt(t)*1.5).Min(1))
+                                   new Point(x2, cy).SmoothLerpTo(new Point(x3, cy), (s1.Proper.ValueAt(t)*1.5).Min(1))
                                    + new Vector(0, (s1.Proper.ValueAt(t)*1.5).Min(1).LerpTransition(0, -25, 0))),
-                               100));
+                               r));
             var sb = p.LimitedSameTime(3.Seconds(), 9.Seconds());
             sb.Add(
                 ShowComplexProduct(vectorFill,
@@ -407,8 +413,8 @@ namespace Animations {
                                    Brushes.Black,
                                    c1,
                                    c2,
-                                   new Point(575, 150),
-                                   100,
+                                   new Point(x3, cy),
+                                   r,
                                    Ani.Anon(t => (sb.Proper.ValueAt(t)*1.2).Min(1)),
                                    vectorFill.LerpTo(matrixFill, 0.5)));
 
@@ -416,8 +422,8 @@ namespace Animations {
             s2.Add(ShowComplex(Ani.Anon(t => vectorFill.LerpTo(matrixFill, 0.5).LerpToTransparent(s2.Proper.ValueAt(t))),
                                Ani.Anon(t => (Brush)Brushes.Black.LerpToTransparent(s2.Proper.ValueAt(t))),
                                c1*c2,
-                               new Point(575, 150),
-                               100));
+                               new Point(x3, cy),
+                               r));
 
             return animation;
         }
@@ -426,19 +432,25 @@ namespace Animations {
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var c1 = new Complex(-0.5, -0.5) * Math.Sqrt(0.5);
             var c2 = new Complex(-0.5, 0.5);
+            var r = 50;
+            var cy = 100;
+            var x1 = 125/2;
+            var x2 = 350/2;
+            var x3 = x2 + (x2-x1);
+            var f = 14;
 
             var animation = new Animation {
-                new TextDesc("+", new Point((125 + 350)/2.0, 150), new Point(0.5, 0.5), fontSize: 20),
-                new TextDesc("=", new Point((575 + 350)/2.0, 150), new Point(0.5, 0.5), fontSize: 20),
-                new TextDesc(c1.ToPrettyString(), new Point(125, 150 - 100), new Point(0.5, 1), fontSize: 20),
-                new TextDesc(c2.ToPrettyString(), new Point(350, 150 - 100), new Point(0.5, 1), fontSize: 20),
-                new TextDesc((c1 + c2).ToPrettyString(), new Point(575, 150 - 100), new Point(0.5, 1), fontSize: 20),
+                new TextDesc("+", new Point((x1 + x2)/2.0, cy), new Point(0.5, 0.5), fontSize: 20),
+                new TextDesc("=", new Point((x3 + x2)/2.0, cy), new Point(0.5, 0.5), fontSize: 20),
+                new TextDesc(c1.ToPrettyString(), new Point(x1, cy - r), new Point(0.5, 1), fontSize: f),
+                new TextDesc(c2.ToPrettyString(), new Point(x2, cy - r), new Point(0.5, 1), fontSize: f),
+                new TextDesc((c1 + c2).ToPrettyString(), new Point(x3, cy - r), new Point(0.5, 1), fontSize: f),
 
-                new TextDesc(c1.ToMagPhaseString(), new Point(125, 150 + 100), new Point(0.5, 0), fontSize: 20),
-                new TextDesc(c2.ToMagPhaseString(), new Point(350, 150 + 100), new Point(0.5, 0), fontSize: 20),
-                new TextDesc((c1 + c2).ToMagPhaseString(), new Point(575, 150 + 100), new Point(0.5, 0), fontSize: 20),
+                new TextDesc(c1.ToMagPhaseString(), new Point(x1, cy + r), new Point(0.5, 0), fontSize: f),
+                new TextDesc(c2.ToMagPhaseString(), new Point(x2, cy + r), new Point(0.5, 0), fontSize: f),
+                new TextDesc((c1 + c2).ToMagPhaseString(), new Point(x3, cy + r), new Point(0.5, 0), fontSize: f),
                 new TextDesc("Adding Complex Numbers: Place Arrows End to End",
-                             new Point(350, 5),
+                             new Point(x2, 5),
                              new Point(0.5, 0),
                              fontSize: 15,
                              foreground: Brushes.Gray),
@@ -446,13 +458,13 @@ namespace Animations {
                 ShowComplex(vectorFill,
                             Brushes.Black,
                             c1,
-                            new Point(125, 150),
-                            100),
+                            new Point(x1, cy),
+                            r),
                 ShowComplex(matrixFill,
                             Brushes.Black,
                             c2,
-                            new Point(350, 150),
-                            100)
+                            new Point(x2, cy),
+                            r)
             };
             var p = animation.Dilated(0.4.Seconds()).Periodic(10.Seconds());
             p.LimitedSameTime(0.Seconds(), 9.5.Seconds()).Add(ShowComplexSum(
@@ -460,18 +472,18 @@ namespace Animations {
                 vectorFill.LerpTo(matrixFill, 0.5),
                 Brushes.Black,
                 new Ani<Complex>[] {c1, c2},
-                new Point(125, 150),
-                new Point(575, 150),
-                new Vector(225, 0),
-                100,
+                new Point(x1, cy),
+                new Point(x3, cy),
+                new Vector(x2-x1, 0),
+                r,
                 p.Proper));
 
             var s2 = p.LimitedSameTime(9.5.Seconds(), 10.Seconds());
             s2.Add(ShowComplex(Ani.Anon(t => vectorFill.LerpTo(matrixFill, 0.5).LerpToTransparent(s2.Proper.ValueAt(t))),
                                Ani.Anon(t => (Brush)Brushes.Black.LerpToTransparent(s2.Proper.ValueAt(t))),
                                c1 + c2,
-                               new Point(575, 150),
-                               100));
+                               new Point(x3, cy),
+                               r));
 
             return animation;
         }
@@ -483,9 +495,8 @@ namespace Animations {
             var si = new Complex(0, s.Real);
             var c1 = Complex.FromPolarCoordinates(Math.Sqrt(0.75), 0);
             var c2 = Complex.FromPolarCoordinates(Math.Sqrt(0.2), Math.PI / 4);
-            var c3 = Complex.FromPolarCoordinates(Math.Sqrt(0.05), Math.PI);
-            var m = ComplexMatrix.FromCellData(s, si, 0, -s, si, 0, 0,0,Complex.FromPolarCoordinates(1, Math.PI));
-            var v = new ComplexVector(new[] { c1, c2, c3 });
+            var m = ComplexMatrix.FromCellData(s, si, -s, si);
+            var v = new ComplexVector(new[] { c1, c2 });
             var u = 50;
 
             var animation = new Animation {
@@ -521,152 +532,45 @@ namespace Animations {
             return animation;
         }
 
+        public static Animation CreateNotGateAnimation() {
+            return CreateCircuitAnimation(
+                300,
+                5.Seconds(),
+                new CircuitOperationWithStyle {
+                    Operation = ComplexMatrix.FromCellData(0,1,1,0),
+                    Description = "Not",
+                    Width = 60
+                }.Repeat(1),
+                new[] {
+                    new CircuitInputWithStyle {
+                        Color = Brushes.Blue.LerpToTransparent(0.7),
+                        Value = new ComplexVector(new Complex[] {1, 0})
+                    }
+                },
+                "Not Gate");
+        }
         public static Animation CreateHadamardGateAnimation() {
-            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
-            var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
-            var pow = 1;
-            var H = ComplexMatrix.MakeUnitaryHadamard(pow);
-            var v0 = new ComplexVector(new Complex[] { 1, 0 });
-            var v1 = v0 * H;
-            var v2 = v1 * H;
-            var u0 = new ComplexVector(new Complex[] { 0, 1 });
-            var u1 = u0 * H;
-            var u2 = u1 * H;
-
-            var m = 150.0;
-            var w = m / (v0.Values.Count+2)/2;
-            var m2 = m/2;
-            var span = 500;
-            var x1 = 100;
-            var x2 = x1 + span/2;
-
-            var duration = 5.Seconds();
-            var sw = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-w * 2, span - w * 2), 0).Sweep(new Vector(0, 1000)));
-            var t1 = duration.Times((x1 - m2 + w * 2) / span);
-            var t2 = duration.Times((x1 + m2) / span);
-            var t3 = duration.Times((x2 - m2 + w * 2) / span);
-            var t4 = duration.Times((x2 + m2) / span);
-            var t5 = duration;
-
-            var wireY = 60;
-            var animation = new Animation {
-                new TextDesc("Hadamard Gate: From Pure to Mixed and Back",
-                             new Point((x1+x2)/2.0, 5),
-                             new Point(0.5, 0),
-                             fontSize: 15,
-                             foreground: Brushes.Gray),
-                // wire
-                new LineSegmentDesc(new Point(0, wireY).Sweep(new Vector(1000, 0)))
-            };
-            
-            var period = animation.Periodic(duration);
-            var period2 = animation.Dilated(1.Seconds(), zero: duration.DividedBy(2)).Periodic(duration);
-            var halfPeriod = animation.Periodic(duration.DividedBy(2));
-            
-            // sweep line
-            period.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            period2.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            
-            // matrices (not shown during multiplication)
-            var xx = halfPeriod.LimitedSameTime(0.Seconds(), t1);
-            var xx2 = halfPeriod.LimitedSameTime(t2, t3);
-            var m1 = ShowMatrix(new Rect(x1 - m2, 100, m2*2, m2*2),
-                                H,
-                                matrixFill,
-                                Brushes.Black);
-            var m_2 = ShowMatrix(new Rect(x2 - m2, 100, m2*2, m2*2),
-                                 H,
-                                 matrixFill,
-                                 Brushes.Black);
-            xx.Add(m1);
-            xx.Add(m_2);
-            xx2.Add(m1);
-            xx2.Add(m_2);
-
-            // matrix multiplications
-            period.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2-t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        H,
-                        v0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2*2, m2*2),
-                    H,
-                    v1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-            period2.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        H,
-                        u0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period2.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    H,
-                    u1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) || t > t3.LerpTo(t4, 0.5) ? "On" : "Mixed"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) || t > t3.LerpTo(t4, 0.5) ? "Off" : "Mixed"),
-                Ani.Anon(t => new Point((t.DividedBy(duration)+0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY))));
-
-            // show vector being 'pushed' by sweep line
-            foreach (var z in new[] {new {p = period, v = new[] {v0, v1, v2}}, new {p = period2, v = new[] {u0, u1, u2}}}) {
-                z.p.LimitedSameTime(0.Seconds(), t1).Add(z.v[0].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[0].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t2, t3).Add(z.v[1].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[1].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t4, t5).Add(z.v[2].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[2].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-            }
-
-            animation.Add(new Animation {
-                // left hadamard gate
-                new RectDesc(new Rect(x1 - 25, wireY - 25, 50, 50), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x1, wireY), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                // right hadamard gate
-                new RectDesc(new Rect(x2 - 25, wireY - 25, 50, 50), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x2, wireY), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-            });
-
-            return animation;
+            return CreateCircuitAnimation(
+                600,
+                10.Seconds(),
+                new CircuitOperationWithStyle {
+                    Operation = ComplexMatrix.MakeUnitaryHadamard(1),
+                    Description = "H",
+                    Width = 40
+                }.Repeat(2),
+                new[] {
+                    new CircuitInputWithStyle {
+                        Color = Brushes.Blue.LerpToTransparent(0.7),
+                        Value = new ComplexVector(new Complex[] {1, 0})
+                    },
+                    new CircuitInputWithStyle {
+                        Color = Brushes.Red.LerpToTransparent(0.7),
+                        Value = new ComplexVector(new Complex[] {0, 1})
+                    }
+                },
+                "Hadamard Gate: From Pure to Mixed and Back");
         }
         public static Animation CreateSeparateWireHadamardGateAnimation() {
-            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
-            var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var s = Math.Sqrt(0.5);
             var H1 = ComplexMatrix.FromCellData(
                 s, s, 0, 0,
@@ -678,499 +582,94 @@ namespace Animations {
                 0, s, 0, s,
                 s, 0,-s, 0,
                 0, s, 0,-s);
-            var v0 = new ComplexVector(new Complex[] { 1, 0, 0, 0 });
-            var v1 = v0 * H1;
-            var v2 = v1 * H2;
-            var u0 = new ComplexVector(new Complex[] { 0, 0, 0, 1 });
-            var u1 = u0 * H1;
-            var u2 = u1 * H2;
-
-            var m = 150.0;
-            var w = m / (v0.Values.Count + 2) / 2;
-            var m2 = m / 2;
-            var span = 500;
-            var x1 = 100;
-            var x2 = x1 + span / 2;
-
-            var duration = 5.Seconds();
-            var sw = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-w * 2, span - w * 2), 0).Sweep(new Vector(0, 1000)));
-            var t1 = duration.Times((x1 - m2 + w * 2) / span);
-            var t2 = duration.Times((x1 + m2) / span);
-            var t3 = duration.Times((x2 - m2 + w * 2) / span);
-            var t4 = duration.Times((x2 + m2) / span);
-            var t5 = duration;
-
-            var wireY1 = 45;
-            var wireY2 = 70;
-            var animation = new Animation {
-                new TextDesc("Hadamard Gates on Separate Wires",
-                             new Point((x1+x2)/2.0, 5),
-                             new Point(0.5, 0),
-                             fontSize: 15,
-                             foreground: Brushes.Gray),
-                // wire
-                new LineSegmentDesc(new Point(0, wireY1).Sweep(new Vector(1000, 0))),
-                new LineSegmentDesc(new Point(0, wireY2).Sweep(new Vector(1000, 0)))
-            };
-
-            var period = animation.Periodic(duration);
-            var period2 = animation.Dilated(1.Seconds(), zero: duration.DividedBy(2)).Periodic(duration);
-            var halfPeriod = animation.Periodic(duration.DividedBy(2));
-
-            // sweep line
-            period.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            period2.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-
-            // matrices (not shown during multiplication)
-            var xx = halfPeriod.LimitedSameTime(0.Seconds(), t1);
-            var xx2 = halfPeriod.LimitedSameTime(t2, t3);
-            var m1 = ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                                H1,
-                                matrixFill,
-                                Brushes.Black);
-            var m_2 = ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                                 H2,
-                                 matrixFill,
-                                 Brushes.Black);
-            xx.Add(m1);
-            xx.Add(m_2);
-            xx2.Add(m1);
-            xx2.Add(m_2);
-
-            // matrix multiplications
-            period.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        H1,
-                        v0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    H2,
-                    v1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-            period2.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        H1,
-                        u0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period2.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    H2,
-                    u1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "On" : "Mixed"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t3.LerpTo(t4, 0.5) ? "Off" : "Mixed"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Off" : "Mixed"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t3.LerpTo(t4, 0.5) ? "Off" : "Mixed"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            // show vector being 'pushed' by sweep line
-            foreach (var z in new[] { new { p = period, v = new[] { v0, v1, v2 } }, new { p = period2, v = new[] { u0, u1, u2 } } }) {
-                z.p.LimitedSameTime(0.Seconds(), t1).Add(z.v[0].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[0].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t2, t3).Add(z.v[1].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[1].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t4, t5).Add(z.v[2].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[2].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-            }
-
-            var gateRadius = 15;
-            animation.Add(new Animation {
-                // left hadamard gate
-                new RectDesc(new Rect(x1 - gateRadius, wireY1 - gateRadius, gateRadius*2, gateRadius*2), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x1, wireY1), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                // right hadamard gate
-                new RectDesc(new Rect(x2 - gateRadius, wireY2 - gateRadius, gateRadius*2, gateRadius*2), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x2, wireY2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-            });
-
-            return animation;
+            return CreateCircuitAnimation(
+                600,
+                10.Seconds(),
+                new[] {
+                    new CircuitOperationWithStyle {
+                        Operation = H1,
+                        Description = "H",
+                        Width = 40
+                    },
+                    new CircuitOperationWithStyle {
+                        Operation = H2,
+                        Description = "H",
+                        Width = 40,
+                        MinWire = 1,
+                        MaxWire = 1
+                    }
+                },
+                new CircuitInputWithStyle {
+                    Color = Brushes.Blue.LerpToTransparent(0.7),
+                    Value = new ComplexVector(new Complex[] {1, 0, 0, 0})
+                }.Repeat(3),
+                "Hadamard Gates on Separate Wires");
         }
         public static Animation CreateCombinedHadamardGateAnimation() {
-            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
-            var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
-            var H = ComplexMatrix.MakeUnitaryHadamard(2);
-            var v0 = new ComplexVector(new Complex[] { 1, 0, 0, 0 });
-            var v1 = v0 * H;
-            var v2 = v1 * H;
-            var u0 = new ComplexVector(new Complex[] { 0, 0, 0, 1 });
-            var u1 = u0 * H;
-            var u2 = u1 * H;
-
-            var m = 150.0;
-            var w = m / (v0.Values.Count + 2) / 2;
-            var m2 = m / 2;
-            var span = 500;
-            var x1 = 100;
-            var x2 = x1 + span / 2;
-
-            var duration = 5.Seconds();
-            var sw = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-w * 2, span - w * 2), 0).Sweep(new Vector(0, 1000)));
-            var t1 = duration.Times((x1 - m2 + w * 2) / span);
-            var t2 = duration.Times((x1 + m2) / span);
-            var t3 = duration.Times((x2 - m2 + w * 2) / span);
-            var t4 = duration.Times((x2 + m2) / span);
-            var t5 = duration;
-
-            var wireY1 = 45;
-            var wireY2 = 70;
-            var animation = new Animation {
-                new TextDesc("Combined Hadamard Gate",
-                             new Point((x1+x2)/2.0, 5),
-                             new Point(0.5, 0),
-                             fontSize: 15,
-                             foreground: Brushes.Gray),
-                // wire
-                new LineSegmentDesc(new Point(0, wireY1).Sweep(new Vector(1000, 0))),
-                new LineSegmentDesc(new Point(0, wireY2).Sweep(new Vector(1000, 0)))
-            };
-
-            var period = animation.Periodic(duration);
-            var period2 = animation.Dilated(1.Seconds(), zero: duration.DividedBy(2)).Periodic(duration);
-            var halfPeriod = animation.Periodic(duration.DividedBy(2));
-
-            // sweep line
-            period.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            period2.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-
-            // matrices (not shown during multiplication)
-            var xx = halfPeriod.LimitedSameTime(0.Seconds(), t1);
-            var xx2 = halfPeriod.LimitedSameTime(t2, t3);
-            var m1 = ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                                H,
-                                matrixFill,
-                                Brushes.Black);
-            var m_2 = ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                                 H,
-                                 matrixFill,
-                                 Brushes.Black);
-            xx.Add(m1);
-            xx.Add(m_2);
-            xx2.Add(m1);
-            xx2.Add(m_2);
-
-            // matrix multiplications
-            period.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        H,
-                        v0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    H,
-                    v1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-            period2.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        H,
-                        u0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period2.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    H,
-                    u1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "On" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "On"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Off" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "Off"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Off" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "Off"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Off" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "Off"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            // show vector being 'pushed' by sweep line
-            foreach (var z in new[] { new { p = period, v = new[] { v0, v1, v2 } }, new { p = period2, v = new[] { u0, u1, u2 } } }) {
-                z.p.LimitedSameTime(0.Seconds(), t1).Add(z.v[0].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[0].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t2, t3).Add(z.v[1].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[1].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t4, t5).Add(z.v[2].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[2].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-            }
-
-            var gateRadius = 15;
-            animation.Add(new Animation {
-                // left hadamard gate
-                new RectDesc(new Rect(x1 - gateRadius*2, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*4, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x1-gateRadius*1.3, wireY1), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 12, foreground: Brushes.Gainsboro),
-                new TextDesc("H", new Point(x1+gateRadius*1.3, wireY2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 12, foreground: Brushes.Gainsboro),
-                new TextDesc("H₂", new Point(x1, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                // right hadamard gate
-                new RectDesc(new Rect(x2 - gateRadius*2, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*4, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x2-gateRadius*1.3, wireY1), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 12, foreground: Brushes.Gainsboro),
-                new TextDesc("H", new Point(x2+gateRadius*1.3, wireY2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 12, foreground: Brushes.Gainsboro),
-                new TextDesc("H₂", new Point(x2, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-            });
-
-            return animation;
+            return CreateCircuitAnimation(
+                500,
+                8.Seconds(),
+                new CircuitOperationWithStyle {
+                    Operation = ComplexMatrix.MakeUnitaryHadamard(2),
+                    Description = "H₂",
+                    Width = 80,
+                    MinWire = 0,
+                    MaxWire = 1,
+                    WireHints = new[] {"H", "H"}
+                }.Repeat(2),
+                new[] {
+                    new CircuitInputWithStyle {
+                        Color = Brushes.Blue.LerpToTransparent(0.7),
+                        Value = new ComplexVector(new Complex[] {1, 0, 0, 0})
+                    },
+                    new CircuitInputWithStyle {
+                        Color = Brushes.Red.LerpToTransparent(0.7),
+                        Value = new ComplexVector(new Complex[] {0, 0, 0, 1})
+                    }
+                },
+                "Combined Hadamard Gate");
         }
         public static Animation CreateGroverDiffusionAnimation() {
-            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
-            var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var H = ComplexMatrix.MakeUnitaryHadamard(2);
             var I2 = ComplexMatrix.FromCellData(
                 -1,0,0,0,
                  0,1,0,0,
                  0,0,1,0,
                  0,0,0,1);
-            var v0 = new ComplexVector(new Complex[] { 0.5, -0.5, -0.5, -0.5 });
-            var v1 = v0 * H;
-            var vc = v1 * I2;
-            var v2 = vc * H;
-            var u0 = new ComplexVector(new Complex[] { Math.Sqrt(0.2), -Math.Sqrt(0.4), Math.Sqrt(0.2), Math.Sqrt(0.2) });
-            var u1 = u0 * H;
-            var uc = u1 * I2;
-            var u2 = uc * H;
-            var c0 = new ComplexVector(new Complex[] { 1, 0, 0, 0 });
-            var c1 = c0 * H;
-            var cc = c1 * I2;
-            var c2 = cc * H;
 
-            var m = 150.0;
-            var w = m / (v0.Values.Count + 2) / 2;
-            var m2 = m / 2;
-            var span = 700;
-            var x1 = 100;
-            var xc = x1 + span / 3;
-            var x2 = xc + span / 3;
-
-            var duration = 5.Seconds();
-            var sw = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-w * 2, span - w * 2), 0).Sweep(new Vector(0, 1000)));
-            var t1 = duration.Times((x1 - m2 + w * 2) / span);
-            var t2 = duration.Times((x1 + m2) / span);
-            var t3 = duration.Times((x2 - m2 + w * 2) / span);
-            var t4 = duration.Times((x2 + m2) / span);
-            var tc1 = duration.Times((xc - m2 + w * 2) / span);
-            var tc2 = duration.Times((xc + m2) / span);
-            var t5 = duration;
-
-            var wireY1 = 45;
-            var wireY2 = 70;
-            var animation = new Animation {
-                new TextDesc("Grover Diffusion Operator: Invert Around the Average",
-                             new Point((x1+x2)/2.0, 5),
-                             new Point(0.5, 0),
-                             fontSize: 15,
-                             foreground: Brushes.Gray),
-                // wire
-                new LineSegmentDesc(new Point(0, wireY1).Sweep(new Vector(1000, 0))),
-                new LineSegmentDesc(new Point(0, wireY2).Sweep(new Vector(1000, 0)))
-            };
-
-            var period = animation.Periodic(duration);
-            var period2 = animation.Dilated(1.Seconds(), zero: duration.DividedBy(3)).Periodic(duration);
-            var period3 = animation.Dilated(1.Seconds(), zero: duration.DividedBy(3).Times(2)).Periodic(duration);
-            var halfPeriod = animation.Periodic(duration.DividedBy(3));
-
-            // sweep line
-            period.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            period2.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            period3.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-
-            // matrices (not shown during multiplication)
-            var xx = halfPeriod.LimitedSameTime(0.Seconds(), t1);
-            var xx2 = halfPeriod.LimitedSameTime(t2, tc1);
-            var xx3 = halfPeriod.LimitedSameTime(tc2, t3);
-            var m1 = ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                                H,
-                                matrixFill,
-                                Brushes.Black);
-            var m_2 = ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                                 H,
-                                 matrixFill,
-                                 Brushes.Black);
-            var m_c = ShowMatrix(new Rect(xc - m2, 100, m2 * 2, m2 * 2),
-                                 I2,
-                                 matrixFill,
-                                 Brushes.Black);
-            foreach (var xxx in new[] {xx, xx2, xx3}) {
-                foreach (var mmm in new[] {m1, m_2, m_c}) {
-                    xxx.Add(mmm);
-                }
-            }
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.4) ? "Mixed" : t < tc1.LerpTo(tc2, 0.4) ? "Mixed" : t < t3.LerpTo(t4, 0.4) ? "Mixed" : "On"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.4) ? "Mixed" : t < tc1.LerpTo(tc2, 0.4) ? "Mixed" : t < t3.LerpTo(t4, 0.4) ? "Mixed" : "On"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(3)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.4) ? "Mixed" : t < tc1.LerpTo(tc2, 0.4) ? "Mixed" : t < t3.LerpTo(t4, 0.4) ? "Mixed" : "Mixed[~on]"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.3333).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(3)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.4) ? "Mixed" : t < tc1.LerpTo(tc2, 0.4) ? "Mixed" : t < t3.LerpTo(t4, 0.4) ? "Mixed" : "Mixed[~off]"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.3333).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(3).Times(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.4) ? "On" : t < tc1.LerpTo(tc2, 0.4) ? "Mixed" : t < t3.LerpTo(t4, 0.4) ? "Mixed" : "Mixed"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.6666).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(3).Times(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.4) ? "On" : t < tc1.LerpTo(tc2, 0.4) ? "Mixed" : t < t3.LerpTo(t4, 0.4) ? "Mixed" : "Mixed"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.6666).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            // matrix multiplications
-            var zz = new[] {
-                new {p = period, v = new[] {v0, v1, vc, v2}}, 
-                new {p = period2, v = new[] {c0, c1, cc, c2}}, 
-                new {p = period3, v = new[] {u0, u1, uc, u2}}
-            };
-            foreach (var z in zz) {
-                z.p.LimitedNewTime(t1, t2).Add(
-                    ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2*2, m2*2),
-                        H,
-                        z.v[0],
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-                z.p.LimitedNewTime(tc1, tc2).Add(
-                    ShowMatrixMultiplication(
-                        t4 - t3,
-                        new Rect(xc - m2, 100, m2*2, m2*2),
-                        I2,
-                        z.v[1],
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-                z.p.LimitedNewTime(t3, t4).Add(
-                    ShowMatrixMultiplication(
-                        t4 - t3,
-                        new Rect(x2 - m2, 100, m2*2, m2*2),
-                        H,
-                        z.v[2],
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-
-                z.p.LimitedSameTime(0.Seconds(), t1).Add(z.v[0].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[0].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t2, tc1).Add(z.v[1].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[1].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(tc2, t3).Add(z.v[2].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[2].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t4, t5).Add(z.v[3].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[3].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-            }
-
-            var gateRadius = 15;
-            animation.Add(new Animation {
-                // left hadamard gate
-                new RectDesc(new Rect(x1 - gateRadius*2, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*4, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x1, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                // center operation
-                new RectDesc(new Rect(xc - gateRadius*2, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*4, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("I-²·.", new Point(xc, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                // right hadamard gate
-                new RectDesc(new Rect(x2 - gateRadius*2, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*4, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x2, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-            });
-
-            return animation;
+            return CreateCircuitAnimation(
+                800,
+                20.Seconds(),
+                new[] {
+                    new CircuitOperationWithStyle {
+                        Operation = H,
+                        Description = "H",
+                        Width = 80,
+                        MinWire = 0,
+                        MaxWire = 1
+                    },
+                    new CircuitOperationWithStyle {
+                        Operation = I2,
+                        Description = "I-²·.",
+                        Width = 80,
+                        MinWire = 0,
+                        MaxWire = 1
+                    },
+                    new CircuitOperationWithStyle {
+                        Operation = H,
+                        Description = "H",
+                        Width = 80,
+                        MinWire = 0,
+                        MaxWire = 1
+                    }
+                },
+                new CircuitInputWithStyle {
+                    Color = Brushes.Blue.LerpToTransparent(0.7),
+                    Value = new ComplexVector(new Complex[] { -0.5, 0.5, 0.5, 0.5 })
+                }.Repeat(4),
+                "Grover Diffusion Operator: Invert Around the Average");
         }
         public static Animation CreateGroverIterationAnimation() {
-            var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
-            var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
             var H = ComplexMatrix.MakeUnitaryHadamard(2);
             var I2 = ComplexMatrix.FromCellData(
                 -1, 0, 0, 0,
@@ -1181,160 +680,34 @@ namespace Animations {
             var U = ComplexMatrix.FromCellData(
                  1, 0, 0, 0,
                  0, 1, 0, 0,
-                 0, 0,-1, 0,
+                 0, 0, -1, 0,
                  0, 0, 0, 1);
 
-            var v0 = new ComplexVector(new Complex[] { -0.5, -0.5, -0.5, -0.5 });
-            var v1 = v0 * U;
-            var v2 = v1 * D;
-            var u0 = new ComplexVector(new Complex[] { Math.Sqrt(0.1), Math.Sqrt(0.1), Math.Sqrt(0.7), Math.Sqrt(0.1) });
-            var u1 = u0 * U;
-            var u2 = u1 * D;
-
-            var m = 150.0;
-            var w = m / (v0.Values.Count + 2) / 2;
-            var m2 = m / 2;
-            var span = 500;
-            var x1 = 100;
-            var x2 = x1 + span / 2;
-
-            var duration = 5.Seconds();
-            var sw = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-w * 2, span - w * 2), 0).Sweep(new Vector(0, 1000)));
-            var t1 = duration.Times((x1 - m2 + w * 2) / span);
-            var t2 = duration.Times((x1 + m2) / span);
-            var t3 = duration.Times((x2 - m2 + w * 2) / span);
-            var t4 = duration.Times((x2 + m2) / span);
-            var t5 = duration;
-
-            var wireY1 = 45;
-            var wireY2 = 70;
-            var animation = new Animation {
-                new TextDesc("Grover Step: Embiggens State Flipped by Unknown Operator",
-                             new Point((x1+x2)/2.0, 5),
-                             new Point(0.5, 0),
-                             fontSize: 15,
-                             foreground: Brushes.Gray),
-                // wire
-                new LineSegmentDesc(new Point(0, wireY1).Sweep(new Vector(1000, 0))),
-                new LineSegmentDesc(new Point(0, wireY2).Sweep(new Vector(1000, 0)))
-            };
-
-            var period = animation.Periodic(duration);
-            var period2 = animation.Dilated(1.Seconds(), zero: duration.DividedBy(2)).Periodic(duration);
-            var halfPeriod = animation.Periodic(duration.DividedBy(2));
-
-            // sweep line
-            period.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-            period2.Add(new LineSegmentDesc(sw, Brushes.Red, 0.5, 4));
-
-            // matrices (not shown during multiplication)
-            var xx = halfPeriod.LimitedSameTime(0.Seconds(), t1);
-            var xx2 = halfPeriod.LimitedSameTime(t2, t3);
-            var m1 = ShowMatrix(new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                                U,
-                                matrixFill,
-                                Brushes.Black);
-            var m_2 = ShowMatrix(new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                                 D,
-                                 matrixFill,
-                                 Brushes.Black);
-            xx.Add(m1);
-            xx.Add(m_2);
-            xx2.Add(m1);
-            xx2.Add(m_2);
-
-            // matrix multiplications
-            period.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        U,
-                        v0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    D,
-                    v1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-            period2.LimitedNewTime(t1, t2).Add(
-                ShowMatrixMultiplication(
-                        t2 - t1,
-                        new Rect(x1 - m2, 100, m2 * 2, m2 * 2),
-                        U,
-                        u0,
-                        matrixFill,
-                        vectorFill,
-                        Brushes.Black));
-            period2.LimitedNewTime(t3, t4).Add(
-                ShowMatrixMultiplication(
-                    t4 - t3,
-                    new Rect(x2 - m2, 100, m2 * 2, m2 * 2),
-                    D,
-                    u1,
-                    matrixFill,
-                    vectorFill,
-                    Brushes.Black));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Mixed" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "On"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => t.Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Mixed" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "Off"),
-                Ani.Anon(t => new Point(t.DividedBy(duration).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Mixed" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "Mixed[~on]"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY1))));
-            animation.Add(new TextDesc(
-                Ani.Anon(t => (t + duration.DividedBy(2)).Mod(duration)).Select(t => t < t1.LerpTo(t2, 0.5) ? "Mixed" : t < t3.LerpTo(t4, 0.5) ? "Mixed" : "Mixed[~off]"),
-                Ani.Anon(t => new Point((t.DividedBy(duration) + 0.5).ProperMod(1).LerpTransition(-w * 2, span - w * 2), wireY2))));
-
-            // show vector being 'pushed' by sweep line
-            foreach (var z in new[] { new { p = period, v = new[] { v0, v1, v2 } }, new { p = period2, v = new[] { u0, u1, u2 } } }) {
-                z.p.LimitedSameTime(0.Seconds(), t1).Add(z.v[0].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[0].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t2, t3).Add(z.v[1].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[1].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-                z.p.LimitedSameTime(t4, t5).Add(z.v[2].Values.Count.Range().Select(
-                    j => ShowComplex(
-                        vectorFill,
-                        Brushes.Black,
-                        z.v[2].Values[j],
-                        sw.Select(e => new Point(e.LerpAcross(0.3).X + w, 100 + w) + new Vector(0, j * w * 2)),
-                        w)));
-            }
-
-            var gateRadius = 15;
-            animation.Add(new Animation {
-                // left hadamard gate
-                new RectDesc(new Rect(x1 - gateRadius*4, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*8, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("[Unknown]", new Point(x1, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-                new TextDesc("Rotate 1=On,2=Off", new Point(x1, wireY2+5), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 10, foreground: Brushes.Gainsboro),
-                // right hadamard gate
-                new RectDesc(new Rect(x2 - gateRadius*4, wireY1/2+wireY2/2 - gateRadius*2, gateRadius*8, gateRadius*4), Brushes.Black, Brushes.White, 1.0),
-                new TextDesc("H", new Point(x2-gateRadius*1.3, wireY2+5), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 10, foreground: Brushes.Gainsboro),
-                new TextDesc("I-²·.", new Point(x2, wireY2+5), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 10, foreground: Brushes.Gainsboro),
-                new TextDesc("H", new Point(x2+gateRadius*1.3, wireY2+5), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 10, foreground: Brushes.Gainsboro),
-                new TextDesc("Diffusion", new Point(x2, wireY1/2+wireY2/2), new Point(0.5, 0.5), fontWeight: FontWeights.ExtraBold, fontSize: 20),
-            });
-
-            return animation;
+            return CreateCircuitAnimation(
+                600,
+                20.Seconds(),
+                new[] {
+                    new CircuitOperationWithStyle {
+                        Operation = U,
+                        Description = "Unknown",
+                        Width = 150,
+                        MinWire = 0,
+                        MaxWire = 1,
+                        WireHints = new[] {"On", "Off"}
+                    },
+                    new CircuitOperationWithStyle {
+                        Operation = D,
+                        Description = "Diffusion",
+                        Width = 150,
+                        MinWire = 0,
+                        MaxWire = 1
+                    }
+                },
+                new CircuitInputWithStyle {
+                    Color = Brushes.Blue.LerpToTransparent(0.7),
+                    Value = new ComplexVector(new Complex[] { 0.5, 0.5, 0.5, 0.5 })
+                }.Repeat(3),
+                "Grover Step: Embiggens Amplitude Flipped by Unknown Gate");
         }
         public static Animation CreateFullGroverAnimation() {
             var vectorFill = (Brush)Brushes.Blue.LerpToTransparent(0.7);
@@ -1361,7 +734,7 @@ namespace Animations {
             var S = U*D;
 
             var GS = new CircuitOperationWithStyle {
-                Description = "Grover Step",
+                Description = "Unknown*Diffusion",
                 MinWire = 0,
                 MaxWire = 2,
                 Operation = S,
@@ -1369,6 +742,8 @@ namespace Animations {
                 WireHints=new[] {"Off","On","On"}
             };
             return CreateCircuitAnimation(
+                700,
+                20.Seconds(),
                 new[] {
                     new CircuitOperationWithStyle {
                         Description="H",
@@ -1397,6 +772,8 @@ namespace Animations {
             var mirror = ComplexMatrix.MakeIdentity(2)*Complex.ImaginaryOne;
 
             return CreateCircuitAnimation(
+                700,
+                20.Seconds(),
                 new[] {
                     new CircuitOperationWithStyle {
                         Description = "Splitter",
@@ -1432,6 +809,71 @@ namespace Animations {
                     new[] {"C", "D"},
                     new[] {"E", "F"},
                     new[] {"G", "H"}
+                }.Repeat(1));
+        }
+        public static Animation CreateInterferometerDetectorAnimation() {
+            var s = Math.Sqrt(0.5);
+            var z = s * Complex.ImaginaryOne;
+            var splitter = ComplexMatrix.FromCellData(
+                s, z, 0, 0,
+                z, s, 0, 0,
+                0, 0, s, z,
+                0, 0, z, s);
+            var mirror = ComplexMatrix.MakeIdentity(4) * Complex.ImaginaryOne;
+            var detector = ComplexMatrix.FromCellData(
+                0, 0, 1, 0,
+                0, 1, 0, 0,
+                1, 0, 0, 0,
+                0, 0, 0, 1);
+
+            var ef = new[] {"E", "F"};
+            return CreateCircuitAnimation(
+                800,
+                20.Seconds(),
+                new[] {
+                    new CircuitOperationWithStyle {
+                        Description = "Splitter",
+                        MaxWire = 0,
+                        MinWire = 0,
+                        Operation = splitter,
+                        Width = 80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description = "Mirror",
+                        MaxWire = 0,
+                        MinWire = 0,
+                        Operation = mirror,
+                        Width = 80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description = "Detector",
+                        MaxWire = 1,
+                        MinWire = 0,
+                        Operation = detector,
+                        Width = 100
+                    },
+                    new CircuitOperationWithStyle {
+                        Description = "Splitter",
+                        MaxWire = 0,
+                        MinWire = 0,
+                        Operation = splitter,
+                        Width = 80
+                    }
+                },
+                new CircuitInputWithStyle {
+                    Value = new ComplexVector(new Complex[] {1, 0, 0, 0}),
+                    Color = Brushes.Blue.LerpToTransparent(0.7)
+                }.Repeat(5),
+                "Mach–Zehnder Interferometer with Detector",
+                new[] {
+                    new[] {
+                        new[] {"A", "B"},
+                        new[] {"C", "D"},
+                        ef,
+                        ef,
+                        new[] {"G", "H"}
+                    },
+                    new[] {"Off", "On"}.Repeat(5).ToArray()
                 });
         }
         public static double SquaredMagnitude(this Complex c) {
@@ -1449,7 +891,7 @@ namespace Animations {
             public int MaxWire;
             public double Width;
         }
-        public static Animation CreateCircuitAnimation(IReadOnlyList<CircuitOperationWithStyle> ops, IReadOnlyList<CircuitInputWithStyle> ins, string desc, string[][] wireLabels = null, string[] stateLabels = null) {
+        public static Animation CreateCircuitAnimation(double span, TimeSpan duration, IReadOnlyList<CircuitOperationWithStyle> ops, IReadOnlyList<CircuitInputWithStyle> ins, string desc, IReadOnlyList<string[][]> wireLabels = null, string[] stateLabels = null) {
             var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
 
             var vals = ins.Select(e => ops.Stream(e.Value, (a, x) => a*x.Operation, streamSeed: true).ToArray()).ToArray();
@@ -1462,10 +904,8 @@ namespace Animations {
             var matrixWidth = 150.0;
             var cellRadius = matrixWidth / (vals[0][0].Values.Count + 2) / 2;
             var matrixRadius = matrixWidth / 2;
-            var span = 800;
             var opXs = numOp.Range().Select(i => -cellRadius+span*(i+1.0)/maxIn).ToArray();
 
-            var duration = 20.Seconds();
             var sweepX = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-cellRadius * 2, span - cellRadius * 2), 0).Sweep(new Vector(0, 1000)));
             var opTs = opXs.Select(x => new {s = duration.Times((x - matrixRadius + cellRadius*2)/span), f = duration.Times((x + matrixRadius)/span)}).ToArray();
 
@@ -1473,7 +913,7 @@ namespace Animations {
             var animation = new Animation {
                 // top description
                 new TextDesc(desc,
-                             new Point((opXs[0]+opXs[2])/2.0, 5),
+                             new Point(span/2.0 - (numOp == 1 ? cellRadius : 0), 5),
                              new Point(0.5, 0),
                              fontSize: 15,
                              foreground: Brushes.Gray),
@@ -1506,7 +946,7 @@ namespace Animations {
             // state labels
             var tts = opTs.Select(e => e.s.LerpTo(e.f, 0.4));
             var wd = numIn.Range().Select(inid => numWire.Range().Select(wid => (numOp + 1).Range().Select(tid => {
-                var label = wireLabels == null ? new[] {"On", "Off"} : wireLabels[tid];
+                var label = wireLabels == null ? new[] {"On", "Off"} : wireLabels[wid][tid];
                 var p = numState.Range().Where(i => ((i >> wid) & 1) == 0).Select(i => vals[inid][tid].Values[i].SquaredMagnitude()).Sum();
                 if (p < 0.001) return label[1];
                 if (p < 0.01) return string.Format("~{0}", label[1]);
@@ -1562,20 +1002,15 @@ namespace Animations {
             }
 
             // state labels
-            wireLabels = wireLabels ?? Enumerable.Repeat(new[] { "On", "Off" }, maxIn).ToArray();
+            wireLabels = wireLabels ?? new[] { "On", "Off" }.Repeat(maxIn).ToArray().Repeat(numWire);
             stateLabels = stateLabels
-                          ?? numState
-                                 .Range()
-                                 .Select(
-                                     i => wireLabels
-                                              .Distinct()
-                                              .Select(
-                                                  t => numWire
-                                                           .Range()
-                                                           .Select(w => t[(i >> w) & 1])
-                                                           .StringJoin(""))
-                                              .StringJoin(""))
-                                 .ToArray();
+                          ?? numState.Range().Select(
+                              i => numWire.Range().Select(
+                                  w => maxIn.Range().Select(
+                                      inid => wireLabels[w][inid][(i >> w) & 1]
+                                    ).Distinct().StringJoin("")
+                                ).StringJoin(",")
+                            ).ToArray();
             foreach (var i in numState.Range()) {
                 animation.Add(
                     new TextDesc(
@@ -1587,7 +1022,7 @@ namespace Animations {
             // circuit diagram
             foreach (var i in numOp.Range()) {
                 var op = ops[i];
-                var h = (numWire == 1 ? 40 : wireYs[1] - wireYs[0]) * (op.MaxWire - op.MinWire + 1);
+                var h = (numWire == 1 ? 40 : wireYs[1] - wireYs[0]) * (op.MaxWire - op.MinWire + 1) * 0.9;
                 var r = new Rect(
                     opXs[i] - op.Width/2,
                     (wireYs[op.MaxWire] + wireYs[op.MinWire] - h)/2,
@@ -1611,7 +1046,7 @@ namespace Animations {
                         animation.Add(
                             new TextDesc(
                                 op.WireHints[j],
-                                new Point(r.Left, wireYs[op.MinWire + j]),
+                                new Point(r.Left+5, wireYs[op.MinWire + j]),
                                 new Point(0, 0.5),
                                 foreground: Brushes.Gray,
                                 fontSize: 10));
