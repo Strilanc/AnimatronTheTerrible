@@ -18,14 +18,19 @@ public struct ComplexMatrix {
     public static ComplexMatrix FromColumns(IReadOnlyList<IReadOnlyList<Complex>> columns) {
         return new ComplexMatrix(columns);
     }
+    public static ComplexMatrix MakeSinglePhaseInverter(int size, int flippedState) {
+        return FromCellData((from i in size.Range()
+                             from j in size.Range()
+                             select (i == j ? Complex.One : 0)*(i == flippedState ? -1 : 1)).ToArray());
+    }
     public static ComplexMatrix FromCellData(params Complex[] cells) {
         var size = (int)Math.Sqrt(cells.Length);
         var cols = cells.Deinterleave(size);
         return FromColumns(cols);
     }
-    public static ComplexMatrix MakeIdentity(int power) {
-        return FromCellData((from i in power.Range()
-                             from j in power.Range()
+    public static ComplexMatrix MakeIdentity(int size) {
+        return FromCellData((from i in size.Range()
+                             from j in size.Range()
                              select i == j ? Complex.One : 0).ToArray());
     }
     public static ComplexMatrix MakeHadamard(int power) {

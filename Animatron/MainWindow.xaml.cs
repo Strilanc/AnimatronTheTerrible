@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.Unitaryness.CreateFullGroverAnimation();
+            var animation = Animations.Unitaryness.CreateFullGroverAnimation(5);
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
@@ -64,7 +64,7 @@ namespace Animatron {
 
             this.Loaded += (sender, arg) => {
                 animation.LinkToCanvas(canvas, life);
-                RunWithPotentialRecording(animation, isRecording, frameTime: 50.Milliseconds(), startTime: 100.Milliseconds(), stopTime: 100.Milliseconds() + 5.Seconds().DividedBy(3));
+                RunWithPotentialRecording(animation, isRecording, frameTime: 50.Milliseconds()); //, startTime: 100.Milliseconds(), stopTime: 100.Milliseconds() + 5.Seconds());
                 this.Width = Math.Max(50, Properties.Settings.Default.focusWidth);
                 this.Height = Math.Max(50, Properties.Settings.Default.focusHeight);
             };
