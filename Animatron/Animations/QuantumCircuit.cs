@@ -13,7 +13,7 @@ using System.Linq;
 using TwistedOak.Element.Env;
 
 namespace Animations {
-    public static class Unitaryness {
+    public static class QuantumCircuit {
         private static Animation Arrow(Ani<Point> start,
                                        Ani<Vector> delta,
                                        Ani<Brush> stroke = null,
