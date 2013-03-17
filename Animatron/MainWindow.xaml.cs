@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.QuantumCircuit.CreateFullGroverAnimation(5);
+            var animation = Animations.Monad.ShowMayMay();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
