@@ -716,6 +716,7 @@ namespace Animations {
             var D = H * I2 * H;
             var U = ComplexMatrix.MakeSinglePhaseInverter(1 << numWire, 1);
             var S = U*D;
+            var input = new ComplexVector(new Complex[] {1}.Concat(Complex.Zero.Repeat((1 << numWire) - 1)).ToArray());
 
             var steps = (int)Math.Round(Math.PI/4*Math.Sqrt(1 << numWire));
             var GS = new CircuitOperationWithStyle {
@@ -740,7 +741,7 @@ namespace Animations {
                 }.Concat(GS.Repeat(steps)).ToArray(),
                 ReadOnlyList.Repeat(
                     new CircuitInputWithStyle {
-                        Value = new ComplexVector(new Complex[] {1}.Concat(Complex.Zero.Repeat((1 << numWire) - 1)).ToArray()),
+                        Value = input,
                         Color = vectorFill
                     },
                     steps+2),
