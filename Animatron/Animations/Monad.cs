@@ -67,13 +67,13 @@ namespace Animations {
             };
         }
         public static Animation ShowMayMay() {
-            var r1 = MakeIntAnimator();
+            var r1 = MakeTextAnimator();
             var r2 = MakeMayAnimator(r1);
             var r3 = MakeMayAnimator(r2);
             var ani = new Animation();
             var t = ani.Periodic(5.Seconds());
             t.Add(
-                r3(t.Proper.Select(e => e < 0.333 ? 5.Maybe().Maybe() : e < 0.666 ? May<int>.NoValue.Maybe() : May<May<int>>.NoValue), true, new Point(50, 50)).Item1
+                r3(t.Proper.Select(e => e < 0.333 ? (e.ToString()).Maybe().Maybe() : e < 0.666 ? May<string>.NoValue.Maybe() : May<May<string>>.NoValue), true, new Point(50, 50)).Item1
             );
             return ani;
         }

@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.Monad.ShowMayMay();
+            var animation = Animations.Cells.CreateCellAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
