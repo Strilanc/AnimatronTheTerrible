@@ -7,11 +7,11 @@ The general idea is to define and transform mappings from times to values, and l
 
 For example, adjusting the appropriate line in MainWindow to the following will show a blue line spinning like a clock hand:
 
-'''C#
+```C#
 var animation = new Animation {
     new LineSegmentDesc(
         pos: Ani.Time.Select(t => new Point(100,100).Sweep(new Vector(Math.Cos(t.TotalSeconds), Math.Sin(t.TotalSeconds))*100)),
         stroke: Brushes.Blue)
 };
-'''
+```
 
