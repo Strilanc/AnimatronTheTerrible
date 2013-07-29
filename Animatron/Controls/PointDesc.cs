@@ -23,10 +23,17 @@ public sealed class PointDesc : IControlDescription<Ellipse> {
         this.StrokeThickness = strokeThickness ?? 0;
         this.Dashed = dashed ?? 0;
     }
+    private static readonly Random rng = new Random();
     public void Link(Ellipse ellipse, IObservable<TimeSpan> pulse, Lifetime life) {
         var topLeft = Pos.Combine(Radius, (p, r) => p - new Vector(r, r));
-        topLeft.Select(e => e.X).Watch(life, pulse, e => ellipse.SetValue(Canvas.LeftProperty, e));
-        topLeft.Select(e => e.Y).Watch(life, pulse, e => ellipse.SetValue(Canvas.TopProperty, e));
+        topLeft.Select(e => e.X).Watch(life, pulse, e => {
+            if (rng.Next(1) == 0)
+            ellipse.SetValue(Canvas.LeftProperty, e);
+        });
+        topLeft.Select(e => e.Y).Watch(life, pulse, e => {
+            if (rng.Next(1) == 0)
+            ellipse.SetValue(Canvas.TopProperty, e);
+        });
         Radius.Watch(life, pulse, e => {
             ellipse.Width = e*2;
             ellipse.Height = e*2;

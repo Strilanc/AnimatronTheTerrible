@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.Cells.CreateCellAnimation();
+            var animation = Animations.Concurrency.CreateDoubleCheckedLockingAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();

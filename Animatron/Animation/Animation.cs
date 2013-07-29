@@ -26,9 +26,9 @@ namespace Animatron {
             var d = new Dictionary<T, LifetimeSource>();
             NextElapsedTime().Subscribe(
                 t => {
-                    var cur = values.ValueAt(t).Distinct();
-                    var stale = d.Keys.Except(cur);
-                    var fresh = cur.Except(d.Keys);
+                    var cur = values.ValueAt(t).Distinct().ToArray();
+                    var stale = d.Keys.Except(cur).ToArray();
+                    var fresh = cur.Except(d.Keys).ToArray();
                     foreach (var e in fresh) {
                         d.Add(e, life.CreateDependentSource());
                         col.Add(e, d[e].Lifetime);

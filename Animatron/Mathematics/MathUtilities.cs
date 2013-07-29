@@ -27,6 +27,12 @@ namespace SnipSnap.Mathematics {
                 yield return seed = aggregator(seed, e);
             }
         }
+        public static Vector PerpCounterClockwise(this Vector v) {
+            return new Vector(-v.Y, v.X);
+        }
+        public static Vector PerpClockwise(this Vector v) {
+            return new Vector(v.Y, -v.X);
+        }
         public static IEnumerable<T> Stream<T>(this IEnumerable<T> items, Func<T, T, T> aggregator) {
             var b = false;
             var cur = default(T);
