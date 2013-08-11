@@ -83,6 +83,7 @@
     </ApplicationDefinition>
     <Compile Include="Animations\Cells.cs" />
     <Compile Include="Animations\Concurrency.cs" />
+    <Compile Include="Animations\BisortedGridSearch.cs" />
     <Compile Include="Animations\LinkedListIntersection.cs" />
     <Compile Include="Animations\Monad.cs" />
     <Compile Include="Animations\QuantumCircuit.cs" />
