@@ -88,9 +88,23 @@ namespace Animations {
             var dx = new Vector(w, 0);
             var dy = new Vector(0, w);
 
+            var rng = new Random(235716);
+            var d = new Dictionary<int, int>();
+            d[-2] = 0;
+            d[-1] = 0;
+            d[0] = 5;
+            d[1] = 1;
+            d[2] = 2;
+            d[3] = 3;
+            d[4] = 4;
+
             for (var i = 0; i < rows; i++) {
+                if (!d.ContainsKey(i)) d[i] = rng.Next(colsPerRow);
                 for (var j = 0; j < colsPerRow; j++) {
-                    ani.Add(new RectDesc(new Rect(b + dy * (rows-i-1) + dx * (j+i*colsPerRow), new Size(w, w)), fill: Brushes.Yellow));
+                    ani.Add(new RectDesc(new Rect(b + dy * (rows-i-1) + dx * (j+i*colsPerRow), new Size(w, w)), fill: Brushes.Yellow.LerpTo(Brushes.Orange, j < d[i] ? 0 : 0.5)));
+                }
+                for (var j = i * colsPerRow + colsPerRow; j < cols; j++) {
+                    ani.Add(new RectDesc(new Rect(b + dy * (rows - i - 1) + dx * j, new Size(w, w)), fill: Brushes.LightGray));
                 }
             }
             for (var i = 0; i <= rows; i++) {
@@ -101,22 +115,34 @@ namespace Animations {
             }
 
             var order = Enumerable.Range(0, rows).Rotate(rows/2);
-            var period = dt.Times(colsPerRowPower*rows*3) + 2.Seconds() + 2.Seconds();
+            var period = dt.Times((colsPerRowPower*rows+2)*3) + 2.Seconds() + 2.Seconds();
             var pani = ani.Periodic(period);
             var tf = period;
 
-            var rng = new Random(2357);
             var t = 0.Seconds();
             t += 2.Seconds();
-            for (var i = 0; i < rows; i++) {
+            for (var i = -2; i < rows; i++) {
                 var min = 0;
                 var max = colsPerRow - 1;
-                for (var j = 0; j < colsPerRowPower; j++) {
+                for (var j = 0; j < (i < 0 ? 1 : colsPerRowPower); j++) {
                     var mid = (min + max) / 2;
-                    var dir = rng.Next(2) == 0;
-                    var x = mid + order[i]*colsPerRow;
-                    var y = rows-order[i]-1;
-                    pani.LimitedSameTime(t, t+dt+dt).Add(new RectDesc(
+                    var dir = i >= 0 && mid >= d[order[i]];
+                    int x;
+                    int y;
+                    if (i == -2) {
+                        x = 3;
+                        y = 1;
+                        dir = false;
+                    } else if (i == -1) {
+                        x = 30;
+                        y = 4;
+                        dir = true;
+                    }
+                    else {
+                        x = mid + order[i] * colsPerRow;
+                        y = rows - order[i] - 1;
+                    }
+                    pani.LimitedSameTime(t, t + dt + dt).Add(new RectDesc(
                         new Rect(b + x * dx + y * dy, new Size(w, w)),
                         stroke: Brushes.Blue,
                         strokeThickness:3));
@@ -146,6 +172,8 @@ namespace Animations {
                                      fill: Brushes.Black));
                     }
                     t += dt;
+
+                    if (i < 0) break;
                 }
 
             }
@@ -241,25 +269,25 @@ namespace Animations {
             return CreateSearchStrategyAnimation(matrix, item, 5);
         }
         public static Animation CreateSearchStrategyAnimation2() {
-            var height = 30;
-            var width = 10;
-            var rng = new Random(500);
+            var height = 40;
+            var width = 8;
+            var rng = new Random(4060);
             var matrix = width.Range().Select(e => new int[height]).ToArray();
             matrix[0][0] = rng.Next(5);
             foreach (var r in height.Range().Skip(1)) {
-                matrix[0][r] = matrix[0][r - 1] + rng.Next(5);
+                matrix[0][r] = matrix[0][r - 1] + rng.Next(8);
             }
             foreach (var c in width.Range().Skip(1)) {
-                matrix[c][0] = matrix[c - 1][0] + rng.Next(5);
+                matrix[c][0] = matrix[c - 1][0] + rng.Next(8);
             }
             foreach (var r in height.Range().Skip(1)) {
                 foreach (var c in width.Range().Skip(1)) {
-                    matrix[c][r] = Math.Max(matrix[c - 1][r], matrix[c][r - 1]) + rng.Next(5);
+                    matrix[c][r] = Math.Max(matrix[c - 1][r] + rng.Next(80), matrix[c][r - 1] + rng.Next(8));
                 }
             }
 
-            var item = 54;
-            return CreateSearchStrategyAnimation(matrix, item, 15);
+            var item = 242;
+            return CreateSearchStrategyAnimation(matrix.Transpose(), item, 15);
         }
     }
 }

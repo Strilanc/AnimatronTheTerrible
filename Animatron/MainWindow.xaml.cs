@@ -27,7 +27,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.BisortedGridSearch.CreateSearchStrategyAnimation();
+            var animation = Animations.BisortedGridSearch.CreateSearchStrategyAnimation2();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
