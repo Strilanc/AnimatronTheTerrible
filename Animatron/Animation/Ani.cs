@@ -44,6 +44,16 @@ namespace Animatron {
         public static Ani<TOut> Select<TIn, TOut>(this Ani<TIn> ani, Func<TIn, TOut> projection) {
             return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t)));
         }
+        public static Ani<TOut[]> SelectMany<TIn, TMid, TOut>(this Ani<TIn> ani, Func<TIn, IEnumerable<TMid>> midProjection, Func<TIn, TMid, TOut> outProjection) {
+            return ani.Select(e => midProjection(e).Select(i => outProjection(e, i)).ToArray());
+        }
+        public static Ani<TOut> SelectMany<TIn, TMid, TOut>(this Ani<TIn> ani, Func<TIn, Ani<TMid>> midProjection, Func<TIn, TMid, TOut> outProjection) {
+            return new AnonymousAni<TOut>(t => {
+                var inp = ani.ValueAt(t);
+                var mid = midProjection(inp).ValueAt(t);
+                return outProjection(inp, mid);
+            });
+        }
         public static Ani<IEnumerable<TOut>> LiftSelect<TIn, TOut>(this Ani<IEnumerable<TIn>> ani, Func<TIn, TOut> projection) {
             return ani.Select(r => r.Select(projection));
         }

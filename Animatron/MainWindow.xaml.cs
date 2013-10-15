@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -9,11 +10,11 @@ using TwistedOak.Util;
 using System.Reactive.Linq;
 using Strilanc.LinqToCollections;
 using System.Linq;
+using SnipSnap.Mathematics;
 
 namespace Animatron {
     public partial class MainWindow {
         public MainWindow() {
-
             //using (var f = File.Open("C:\\Users\\Craig\\Documents\\GifRecordings\\634965148361216632.gif", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)) {
             //    using (var f2 = File.Open("C:\\Users\\Craig\\Documents\\GifRecordings\\LOOP634965148361216632.gif",
             //                           FileMode.OpenOrCreate,
@@ -27,7 +28,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.BisortedGridSearch.CreateSearchStrategyAnimation2();
+            var animation = Animations.SuperpositionVisualization.CreateAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();

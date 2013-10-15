@@ -6,7 +6,6 @@ using Animatron;
 using SnipSnap.Mathematics;
 using Strilanc.Value;
 using TwistedOak.Element.Env;
-using System.Linq;
 using Strilanc.LinqToCollections;
 
 namespace Animations {
@@ -187,7 +186,7 @@ namespace Animations {
             var thread2X = 210;
             var thread2X2 = 210+50;
             var rightX = thread2X2 + sideMargin*2;
-            var centerX = rightX / 2;
+            //var centerX = rightX / 2;
 
             //t.Add(new TextDesc(
             //    "No Acquire ⇒ Garbage",
@@ -265,7 +264,7 @@ namespace Animations {
                 Tuple.Create(t_readX, t2RetR, b3, "return s.X", -10),
                 Tuple.Create(t_garbage, t2RetR, (Ani<Rect>)null, "[garbage]", 0),
                 Tuple.Create(1.01, t2RetR, (Ani<Rect>)null, "[read] s.X", 0),
-                Tuple.Create(1.01, t2RetR, (Ani<Rect>)null, "[read] s.Y", 0),
+                Tuple.Create(1.01, t2RetR, (Ani<Rect>)null, "[read] s.Y", 0)
             };
 
             //var cur1 = 4;
@@ -330,7 +329,7 @@ namespace Animations {
                 t.Add(
                     new RectDesc(
                         times[i].Item2.Select(e => new Rect(e.X == thread2X ? thread2X2 - 52 : thread1X, localinsty, e.X == thread2X ? 52 : 83, 15)),
-                        fill: visible.Select(e => e > 0.5 ? (Brush)(i <= 6 ? Brushes.Black : Brushes.Black).LerpToTransparent(0.75) : Brushes.Transparent)));
+                        fill: visible.Select(e => e > 0.5 ? (Brush)(Brushes.Black).LerpToTransparent(0.75) : Brushes.Transparent)));
 
                 //if (cur1 > 0) {
                 //    t.Add(new RectDesc(
@@ -344,8 +343,8 @@ namespace Animations {
                 //}
             }
 
-            var codeY = 200;
-            var codeN = 0;
+            //var codeY = 200;
+            //var codeN = 0;
             //Func<Point> makeCodeP = () => new Point(cacheX, codeY + codeN++*15);
 
             t.Add(

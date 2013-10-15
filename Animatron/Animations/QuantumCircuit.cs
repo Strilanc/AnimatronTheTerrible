@@ -48,7 +48,7 @@ namespace Animations {
                 yield return r * new Vector(Math.Cos(d + startPhase), -Math.Sin(d + startPhase));
             }
         } 
-        private static Animation ShowComplex(Ani<Brush> fill,
+        public static Animation ShowComplex(Ani<Brush> fill,
                                         Ani<Brush> valueStroke,
                                         Ani<Complex> value,
                                         Ani<Point> position,
@@ -57,16 +57,20 @@ namespace Animations {
                                         Ani<double> phaseOffset = null,
                                         Ani<Turn> rotation = null,
                                         Ani<Brush> sweepFill = null,
-                                        Ani<double> squish = null) {
+                                        Ani<double> squish = null,
+                                        Ani<double> sweepScale = null) {
             phaseOffset = phaseOffset ?? 0;
-            var phaseRadius = value.Select(e => Math.Max(0.05, e.Magnitude));
             rotation = rotation ?? Turn.Zero;
             sweepFill = sweepFill ?? fill;
             squish = squish ?? 1.0;
+            sweepScale = sweepScale ?? 0.5;
+            var phaseRadius = from v in value 
+                              from s in sweepScale 
+                              select s * Math.Max(0.05, v.Magnitude);
             var mag = value.Select(e => e.Magnitude*e.Magnitude);
             return new Animation {
                 new PolygonDesc(
-                    phaseOffset.Combine(value, position, unitRadius, phaseRadius, (o, v, p, r, f) => PhaseCurve(v.Phase, f * r*0.5, o).Select(e => e + p).ToArray().AsEnumerable()),
+                    phaseOffset.Combine(value, position, unitRadius, phaseRadius, (o, v, p, r, f) => PhaseCurve(v.Phase, f * r, o).Select(e => e + p).ToArray().AsEnumerable()),
                     stroke: sweepFill.Select(e => e.LerpTo(Brushes.Black, 0.5, lerpAlpha: false)),
                     fill: sweepFill.Select(e => e.LerpToTransparent(0.5)),
                     strokeThickness: value.Select(e => Math.Min(Math.Abs(e.Phase)*10,Math.Min(e.Magnitude*3,1)))),
@@ -495,7 +499,7 @@ namespace Animations {
             var si = new Complex(0, s.Real);
             var c1 = Complex.FromPolarCoordinates(Math.Sqrt(0.75), 0);
             var c2 = Complex.FromPolarCoordinates(Math.Sqrt(0.2), Math.PI / 4);
-            var m = ComplexMatrix.FromCellData(s, si, -s, si);
+            var m = ComplexMatrix.FromSquareData(s, si, -s, si);
             var v = new ComplexVector(new[] { c1, c2 });
             var u = 50;
 
@@ -537,7 +541,7 @@ namespace Animations {
                 300,
                 5.Seconds(),
                 new CircuitOperationWithStyle {
-                    Operation = ComplexMatrix.FromCellData(0,1,1,0),
+                    Operation = ComplexMatrix.FromSquareData(0,1,1,0),
                     Description = "Not",
                     Width = 60
                 }.Repeat(1),
@@ -572,12 +576,12 @@ namespace Animations {
         }
         public static Animation CreateSeparateWireHadamardGateAnimation() {
             var s = Math.Sqrt(0.5);
-            var H1 = ComplexMatrix.FromCellData(
+            var H1 = ComplexMatrix.FromSquareData(
                 s, s, 0, 0,
                 s,-s, 0, 0,
                 0, 0, s, s,
                 0, 0, s,-s);
-            var H2 = ComplexMatrix.FromCellData(
+            var H2 = ComplexMatrix.FromSquareData(
                 s, 0, s, 0,
                 0, s, 0, s,
                 s, 0,-s, 0,
@@ -631,7 +635,7 @@ namespace Animations {
         }
         public static Animation CreateGroverDiffusionAnimation() {
             var H = ComplexMatrix.MakeUnitaryHadamard(2);
-            var I2 = ComplexMatrix.FromCellData(
+            var I2 = ComplexMatrix.FromSquareData(
                 -1,0,0,0,
                  0,1,0,0,
                  0,0,1,0,
@@ -671,13 +675,13 @@ namespace Animations {
         }
         public static Animation CreateGroverIterationAnimation() {
             var H = ComplexMatrix.MakeUnitaryHadamard(2);
-            var I2 = ComplexMatrix.FromCellData(
+            var I2 = ComplexMatrix.FromSquareData(
                 -1, 0, 0, 0,
                  0, 1, 0, 0,
                  0, 0, 1, 0,
                  0, 0, 0, 1);
             var D = H*I2*H;
-            var U = ComplexMatrix.FromCellData(
+            var U = ComplexMatrix.FromSquareData(
                  1, 0, 0, 0,
                  0, 1, 0, 0,
                  0, 0, -1, 0,
@@ -752,7 +756,7 @@ namespace Animations {
         public static Animation CreateInterferometerAnimation() {
             var s = Math.Sqrt(0.5);
             var z = s*Complex.ImaginaryOne;
-            var splitter = ComplexMatrix.FromCellData(
+            var splitter = ComplexMatrix.FromSquareData(
                 s, z,
                 z, s);
             var mirror = ComplexMatrix.MakeIdentity(2)*Complex.ImaginaryOne;
@@ -800,13 +804,13 @@ namespace Animations {
         public static Animation CreateInterferometerDetectorAnimation() {
             var s = Math.Sqrt(0.5);
             var z = s * Complex.ImaginaryOne;
-            var splitter = ComplexMatrix.FromCellData(
+            var splitter = ComplexMatrix.FromSquareData(
                 s, z, 0, 0,
                 z, s, 0, 0,
                 0, 0, s, z,
                 0, 0, z, s);
             var mirror = ComplexMatrix.MakeIdentity(4) * Complex.ImaginaryOne;
-            var detector = ComplexMatrix.FromCellData(
+            var detector = ComplexMatrix.FromSquareData(
                 0, 0, 1, 0,
                 0, 1, 0, 0,
                 1, 0, 0, 0,

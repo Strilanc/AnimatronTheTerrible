@@ -84,6 +84,8 @@
     <Compile Include="Animations\Cells.cs" />
     <Compile Include="Animations\Concurrency.cs" />
     <Compile Include="Animations\BisortedGridSearch.cs" />
+    <Compile Include="Animations\SuperpositionVisualization.cs" />
+    <Compile Include="Animations\SecureMultiPartyMult.cs" />
     <Compile Include="Animations\LinkedListIntersection.cs" />
     <Compile Include="Animations\Monad.cs" />
     <Compile Include="Animations\QuantumCircuit.cs" />
@@ -97,6 +99,8 @@
     <Compile Include="Controls\PolygonDesc.cs" />
     <Compile Include="Mathematics\ComplexMatrix.cs" />
     <Compile Include="Mathematics\ComplexVector.cs" />
+    <Compile Include="Mathematics\ProbabilityDistribution.cs" />
+    <Compile Include="Mathematics\QuantumSuperposition.cs" />
     <Compile Include="Util\TimeUtil.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -141,6 +141,16 @@ namespace SnipSnap.Mathematics {
             return color.LerpTo(Color.FromArgb(0, color.R, color.G, color.B) , proportion);
         }
 
+        public static IEnumerable<IReadOnlyList<T>> ChooseWithReplacement<T>(this IReadOnlyList<T> items, int numberOfItemsToDraw) {
+            if (items == null) throw new ArgumentNullException("items");
+            if (numberOfItemsToDraw < 0) throw new ArgumentOutOfRangeException("numberOfItemsToDraw", "numberOfItemsToDraw < 0");
+            if (numberOfItemsToDraw == 0) return new[] { new T[0] };
+
+            return from tail in items.ChooseWithReplacement(numberOfItemsToDraw - 1)
+                   from head in items
+                   select new[] {head}.Concat(tail).ToArray();
+        }
+
         public static Point LerpAcross(this LineSegment line, double proportion) {
             return line.Start + line.Delta*proportion;
         }
@@ -149,5 +159,9 @@ namespace SnipSnap.Mathematics {
             var d = line.Delta;
             return (b*d)/d.LengthSquared;
         }
+
+        public static IReadOnlyList<int> Indexes<T>(this IReadOnlyList<T> list) {
+            return list.Select((e, i) => i);
+        } 
     }
 }

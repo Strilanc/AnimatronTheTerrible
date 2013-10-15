@@ -12,9 +12,17 @@ using Strilanc.Value;
 using TwistedOak.Collections;
 using TwistedOak.Element.Env;
 using TwistedOak.Util;
+using System.Linq;
 
 namespace Animatron {
     public static class Util {
+        public static Vector Sum(this IEnumerable<Vector> vectors) {
+            return vectors.Aggregate(default(Vector), (a, e) => a + e);
+        }
+        public static Vector Average(this IEnumerable<Vector> vectors) {
+            var n = 0;
+            return vectors.Select(e => { n++; return e; }).Sum() / Math.Max(1, n);
+        }
         public static IReadOnlyList<T> Repeat<T>(this T item, int count) {
             return ReadOnlyList.Repeat(item, count);
         } 
@@ -46,6 +54,9 @@ namespace Animatron {
         public static string StringJoin<T>(this IEnumerable<T> items, string separator) {
             if (items == null) throw new ArgumentNullException("items");
             return string.Join(separator, items);
+        }
+        public static Ani<T[]> AniAll<T>(this IEnumerable<Ani<T>> anis) {
+            return Ani.Anon(t => anis.Select(e => e.ValueAt(t)).ToArray());
         }
         public static void AddAll<T>(this PerishableCollection<T> collection, IEnumerable<T> items, Lifetime life) {
             foreach (var e in items) collection.Add(e, life);
@@ -130,6 +141,9 @@ namespace Animatron {
         }
         public static string ToMagPhaseString(this Complex c, string af = null, string pf = null) {
             return string.Format("√{0} ⋅ ∠{1}°", (c.Magnitude * c.Magnitude).ToString(af ?? "0.##"), (c.Phase * 180 / Math.PI).ToString(pf ?? "0.#"));
+        }
+        public static string ToNormMagPhaseString(this Complex c, string af = null, string pf = null) {
+            return string.Format("{0} ⋅ ∠{1}°", c.Magnitude.ToString(af ?? "0.##"), (c.Phase * 180 / Math.PI).ProperMod(360).ToString(pf ?? "0.#"));
         }
         public static SolidColorBrush LerpToTransparent(this SolidColorBrush start, double p) {
             if (p <= 0) return start;

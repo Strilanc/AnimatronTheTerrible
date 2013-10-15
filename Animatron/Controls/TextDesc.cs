@@ -53,7 +53,7 @@ public sealed class TextDesc : IControlDescription<TextBlock> {
         FontStyle.Watch(life, pulse, e => textBlock.FontStyle = e);
         FontFamily.Watch(life, pulse, e => textBlock.FontFamily = e);
         FontWeight.Watch(life, pulse, e => textBlock.FontWeight = e);
-        FontSize.Watch(life, pulse, e => textBlock.FontSize = e);
+        FontSize.Watch(life, pulse, e => textBlock.FontSize = Math.Max(e, 0.01));
         Foreground.Watch(life, pulse, e => textBlock.Foreground = e);
     }
     public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
