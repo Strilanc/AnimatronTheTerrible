@@ -92,7 +92,6 @@ namespace Animations {
                                                 select Dir.FromNaturalAngle(bar.Angle)));
             }
             ani.Add(new PolygonDesc(aniBorderPoints.Select(e => e.AsEnumerable()), Brushes.Gray, 1, 2));
-
             return ani;
         }
 
@@ -131,20 +130,26 @@ namespace Animations {
             var start = new Point(200, 200);
             return new Animation {
                 MakeTransformAnimation(
-                start,
-                v.Values,
-                Ani.Anon(t => {
-                    var p = t.TotalSeconds%(ackGates.Length + 4) - 1;
-                    var pi = (int)Math.Floor(p);
-                    var pd = p - pi;
-                    pd = (pd*2 - 1).Clamp(0, 1);
+                    start,
+                    v.Values,
+                    Ani.Anon(t => {
+                        var p = t.TotalSeconds%(ackGates.Length + 4) - 1;
+                        var pi = (int)Math.Floor(p);
+                        var pd = p - pi;
+                        pd = (pd*2 - 1).Clamp(0, 1);
 
-                    var g1 = ackGates[pi.Clamp(0, ackGates.Length - 1)];
-                    var g2 = ackGates[(pi + 1).Clamp(0, ackGates.Length - 1)];
-                    return (g1*(1 - pd) + g2*pd);
-                }),
-                new[] { "c₁ (win)", "c₂ (win)", "c₃", "c₄", "c₅", "c₆", "c₇ (win)", "c₈ (win)", "c₉", "c₁₀", "c₁₁ (win)", "c₁₂ (win)", "c₁₃ (win)", "c₁₄ (win)", "c₁₅", "c₁₆" }),
-                MakeAxies(new Point(350, 295))
+                        var g1 = ackGates[pi.Clamp(0, ackGates.Length - 1)];
+                        var g2 = ackGates[(pi + 1).Clamp(0, ackGates.Length - 1)];
+                        return (g1*(1 - pd) + g2*pd);
+                    }),
+                    new[] {
+                        "c₁ (win)", "c₂ (win)", "c₃", "c₄", "c₅", "c₆", "c₇ (win)", "c₈ (win)", "c₉", "c₁₀", "c₁₁ (win)", "c₁₂ (win)", "c₁₃ (win)", "c₁₄ (win)",
+                        "c₁₅", "c₁₆"
+                    }),
+                MakeAxies(new Point(350, 295)),
+                new TextDesc("Quantum Pseudotelepathy", new Point(400/2, 5), new Point(0.5, 0), fontSize: 20),
+                new TextDesc("Applying Alice's and Bob's Gates for Bottom Left Case", new Point(400/2, 30), new Point(0.5, 0)),
+                new TextDesc("(makes about as much sense as [insert political joke])", new Point(400/2, 50), new Point(0.5, 0), fontSize: 8),
             };
         }
         private static Animation MakeTransformAnimation(Point center, IEnumerable<Complex> input, Ani<ComplexMatrix> transform, string[] labels = null) {
@@ -342,7 +347,7 @@ namespace Animations {
             };
         }
         public static Animation CreateAnimation() {
-            return CreateEigenAnimation2();
+            return CreateTelepathyAnimation();
         }
     }
 }
