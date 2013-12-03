@@ -41,20 +41,21 @@ public sealed class TextDesc : IControlDescription<TextBlock> {
         this.Foreground = foreground ?? Brushes.Black;
     }
     public void Link(TextBlock textBlock, IObservable<TimeSpan> pulse, Lifetime life) {
-        Text.Watch(life, pulse, e => textBlock.Text = e);
+        var basis = Basis.FromDirectionAndUnits(Dir.AlongPositiveX, Basis.DegreesPerRotation, false);
+        Direction.Watch(life, pulse, e => textBlock.RenderTransform = new RotateTransform(basis.DirToSignedAngle(e)));
         var size = new AnonymousAni<Size>(t => new Size(textBlock.ActualWidth, textBlock.ActualHeight));
         var xy = Pos.Combine(Reference, size, (p, r, s) => p - new Vector(r.X * s.Width, r.Y * s.Height));
         xy.Select(e => e.X).Watch(life, pulse, e => textBlock.SetValue(Canvas.LeftProperty, e));
         xy.Select(e => e.Y).Watch(life, pulse, e => textBlock.SetValue(Canvas.TopProperty, e));
         Reference.Watch(life, pulse, e => textBlock.RenderTransformOrigin = e);
 
-        var basis = Basis.FromDirectionAndUnits(Dir.AlongPositiveX, Basis.DegreesPerRotation, false);
-        Direction.Watch(life, pulse, e => textBlock.RenderTransform = new RotateTransform(basis.DirToSignedAngle(e)));
         FontStyle.Watch(life, pulse, e => textBlock.FontStyle = e);
         FontFamily.Watch(life, pulse, e => textBlock.FontFamily = e);
         FontWeight.Watch(life, pulse, e => textBlock.FontWeight = e);
         FontSize.Watch(life, pulse, e => textBlock.FontSize = Math.Max(e, 0.01));
         Foreground.Watch(life, pulse, e => textBlock.Foreground = e);
+       
+        Text.Watch(life, pulse, e => textBlock.Text = e);
     }
     public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
         var r = new TextBlock();

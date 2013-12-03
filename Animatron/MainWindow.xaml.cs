@@ -28,7 +28,7 @@ namespace Animatron {
             //return;
             
             var life = Lifetime.Immortal;
-            var animation = Animations.SuperpositionVisualization.CreateAnimation();
+            var animation = Animations.IntervalReferences.CreateAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
