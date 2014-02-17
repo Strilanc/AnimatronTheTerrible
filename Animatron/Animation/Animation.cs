@@ -24,7 +24,7 @@ namespace Animatron {
         }
         private void LinkMany<T>(IAni<IEnumerable<T>> values, PerishableCollection<T> col, Lifetime life) {
             var d = new Dictionary<T, LifetimeSource>();
-            NextElapsedTime().Subscribe(
+            NextElapsedTime().SubscribeLife(
                 t => {
                     var cur = values.ValueAt(t).Distinct().ToArray();
                     var stale = d.Keys.Except(cur).ToArray();
@@ -93,7 +93,7 @@ namespace Animatron {
             }
         }
         public void LinkToCanvas(Canvas canvas, Lifetime life) {
-            Controls.CurrentAndFutureItems().Subscribe(
+            Controls.CurrentAndFutureItems().SubscribeLife(
                 e => {
                     canvas.Children.Add(e.Value);
                     e.Lifetime.WhenDead(() => canvas.Children.Remove(e.Value));

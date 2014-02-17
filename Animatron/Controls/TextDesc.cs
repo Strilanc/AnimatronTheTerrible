@@ -43,11 +43,12 @@ public sealed class TextDesc : IControlDescription<TextBlock> {
     public void Link(TextBlock textBlock, IObservable<TimeSpan> pulse, Lifetime life) {
         var basis = Basis.FromDirectionAndUnits(Dir.AlongPositiveX, Basis.DegreesPerRotation, false);
         Direction.Watch(life, pulse, e => textBlock.RenderTransform = new RotateTransform(basis.DirToSignedAngle(e)));
-        var size = new AnonymousAni<Size>(t => new Size(textBlock.ActualWidth, textBlock.ActualHeight));
+        var size = new AnonymousAni<Size>(t => new Size(textBlock.ActualWidth, textBlock.ActualHeight), false);
         var xy = Pos.Combine(Reference, size, (p, r, s) => p - new Vector(r.X * s.Width, r.Y * s.Height));
         xy.Select(e => e.X).Watch(life, pulse, e => textBlock.SetValue(Canvas.LeftProperty, e));
         xy.Select(e => e.Y).Watch(life, pulse, e => textBlock.SetValue(Canvas.TopProperty, e));
         Reference.Watch(life, pulse, e => textBlock.RenderTransformOrigin = e);
+        Reference.Watch(life, pulse, e => textBlock.HorizontalAlignment = e.X != 0.5 ? HorizontalAlignment.Stretch : HorizontalAlignment.Center);
 
         FontStyle.Watch(life, pulse, e => textBlock.FontStyle = e);
         FontFamily.Watch(life, pulse, e => textBlock.FontFamily = e);

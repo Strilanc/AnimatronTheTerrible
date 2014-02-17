@@ -4,6 +4,7 @@ using TwistedOak.Util;
 using System.Reactive.Linq;
 using System.Linq;
 using Strilanc.LinqToCollections;
+using TwistedOak.Element.Env;
 
 namespace Animatron {
     public interface IAni<out T> {
@@ -11,6 +12,7 @@ namespace Animatron {
     }
     public abstract class Ani<T> : IAni<T> {
         public abstract T ValueAt(TimeSpan t);
+        public abstract bool IsConstant();
 
         public static implicit operator Ani<T>(T v) {
             return new ConstantAni<T>(v);
@@ -39,10 +41,10 @@ namespace Animatron {
     public static class Ani {
         public static Ani<TimeSpan> Time { get { return Anon(e => e); } }
         public static Ani<T> Anon<T>(this Func<TimeSpan, T> func) {
-            return new AnonymousAni<T>(func);
+            return new AnonymousAni<T>(func, false);
         }
         public static Ani<TOut> Select<TIn, TOut>(this Ani<TIn> ani, Func<TIn, TOut> projection) {
-            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t)));
+            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t)), false);
         }
         public static Ani<TOut[]> SelectMany<TIn, TMid, TOut>(this Ani<TIn> ani, Func<TIn, IEnumerable<TMid>> midProjection, Func<TIn, TMid, TOut> outProjection) {
             return ani.Select(e => midProjection(e).Select(i => outProjection(e, i)).ToArray());
@@ -52,7 +54,7 @@ namespace Animatron {
                 var inp = ani.ValueAt(t);
                 var mid = midProjection(inp).ValueAt(t);
                 return outProjection(inp, mid);
-            });
+            }, false);
         }
         public static Ani<IEnumerable<TOut>> LiftSelect<TIn, TOut>(this Ani<IEnumerable<TIn>> ani, Func<TIn, TOut> projection) {
             return ani.Select(r => r.Select(projection));
@@ -64,28 +66,31 @@ namespace Animatron {
             if (ani == null) throw new ArgumentNullException("ani");
             if (ani2 == null) throw new ArgumentNullException("ani2");
             if (projection == null) throw new ArgumentNullException("projection");
-            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t)));
+            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t)), false);
         }
         public static Ani<TOut> Combine<TIn1, TIn2, TIn3, TOut>(this Ani<TIn1> ani, Ani<TIn2> ani2, Ani<TIn3> ani3, Func<TIn1, TIn2, TIn3, TOut> projection) {
-            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t)));
+            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t)), false);
         }
         public static Ani<TOut> Combine<TIn1, TIn2, TIn3, TIn4, TOut>(this Ani<TIn1> ani, Ani<TIn2> ani2, Ani<TIn3> ani3, Ani<TIn4> ani4, Func<TIn1, TIn2, TIn3, TIn4, TOut> projection) {
-            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t), ani4.ValueAt(t)));
+            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t), ani4.ValueAt(t)), false);
         }
         public static Ani<TOut> Combine<TIn1, TIn2, TIn3, TIn4, TIn5, TOut>(this Ani<TIn1> ani, Ani<TIn2> ani2, Ani<TIn3> ani3, Ani<TIn4> ani4, Ani<TIn5> ani5, Func<TIn1, TIn2, TIn3, TIn4, TIn5, TOut> projection) {
-            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t), ani4.ValueAt(t), ani5.ValueAt(t)));
+            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t), ani4.ValueAt(t), ani5.ValueAt(t)), false);
         }
         public static Ani<TOut> Combine<TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut>(this Ani<TIn1> ani, Ani<TIn2> ani2, Ani<TIn3> ani3, Ani<TIn4> ani4, Ani<TIn5> ani5, Ani<TIn6> ani6, Func<TIn1, TIn2, TIn3, TIn4, TIn5, TIn6, TOut> projection) {
-            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t), ani4.ValueAt(t), ani5.ValueAt(t), ani6.ValueAt(t)));
+            return new AnonymousAni<TOut>(t => projection(ani.ValueAt(t), ani2.ValueAt(t), ani3.ValueAt(t), ani4.ValueAt(t), ani5.ValueAt(t), ani6.ValueAt(t)), false);
         }
         public static void Watch<T>(this Ani<T> v, Lifetime life, IObservable<TimeSpan> pulse, Action<T> difAction, IEqualityComparer<T> eq = null) {
             if (v == null) throw new ArgumentNullException("v");
             if (pulse == null) throw new ArgumentNullException("pulse");
             if (difAction == null) throw new ArgumentNullException("difAction");
-            pulse.DistinctUntilChanged()
-                 .Select(v.ValueAt)
-                 .DistinctUntilChanged(eq ?? EqualityComparer<T>.Default)
-                 .Subscribe(difAction, life);
+            if (v.IsConstant()) {
+                difAction(v.ValueAt(0.Seconds()));
+            } else {
+                var obs = pulse.Select(v.ValueAt);
+                obs = eq == null ? obs.DistinctUntilChanged() : obs.DistinctUntilChanged(eq);
+                obs.SubscribeLife(difAction, life);
+            }
         }
     }
 
@@ -97,15 +102,20 @@ namespace Animatron {
         public override T ValueAt(TimeSpan t) {
             return _value;
         }
+        public override bool IsConstant() {
+            return true;
+        }
     }
     public sealed class AnonymousAni<T> : Ani<T> {
         private readonly Func<TimeSpan, T> _valueAt;
         private TimeSpan? _lastIn;
+        private readonly bool _isConstant;
         private T _lastOut;
         
-        public AnonymousAni(Func<TimeSpan, T> valueAt) {
+        public AnonymousAni(Func<TimeSpan, T> valueAt, bool isConstant) {
             if (valueAt == null) throw new ArgumentNullException("valueAt");
             _valueAt = valueAt;
+            _isConstant = isConstant;
         }
         public override T ValueAt(TimeSpan t) {
             if (_lastIn != t) {
@@ -113,6 +123,9 @@ namespace Animatron {
                 _lastOut = _valueAt(t);
             }
             return _lastOut;
+        }
+        public override bool IsConstant() {
+            return _isConstant;
         }
     }
 }

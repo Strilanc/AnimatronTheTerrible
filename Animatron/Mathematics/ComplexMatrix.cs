@@ -30,20 +30,36 @@ public struct ComplexMatrix {
     public bool IsUnitary() {
         return (this*this.Dagger()).IsIdentity();
     }
-    public static ComplexVector operator *(ComplexMatrix matrix, ComplexVector vector) {
-        if (matrix.Span != vector.Values.Count) throw new ArgumentException();
-        return new ComplexVector(
-            matrix.Rows
-            .Select(r => new ComplexVector(r) * vector));
-    }
     public static ComplexMatrix operator +(ComplexMatrix m1, ComplexMatrix m2) {
         return FromColumns(
             m1.Columns.Zip(m2.Columns, (c1, c2) => c1.Zip(c2, (e1, e2) => e1 + e2)));
     }
-    public static ComplexMatrix FromSquareData(params Complex[] cells) {
-        var size = (int)Math.Sqrt(cells.Length);
-        var cols = cells.Deinterleave(size);
+    public static ComplexMatrix FromSquareData(IEnumerable<Complex> cells) {
+        var size = (int)Math.Sqrt(cells.Count());
+        var cols = cells.ToArray().Deinterleave(size);
         return FromColumns(cols);
+    }
+    public static ComplexMatrix FromSquareData(params Complex[] cells) {
+        return FromSquareData(cells.AsEnumerable());
+    }
+    public static ComplexMatrix FromTransitions(int wireCount, Func<bool[], bool[]> transition) {
+        return FromColumns(
+            new[] { false, true }
+            .ChooseWithReplacement(wireCount)
+            .Select(e => new[] { false, true }
+                    .ChooseWithReplacement(wireCount)
+                    .Select(v => v.SequenceEqual(transition(e.ToArray())) ? Complex.One : 0)));
+    }
+    public static ComplexMatrix FromPhasing(int wireCount, Func<bool[], Complex> transition) {
+        return FromColumns(
+            new[] { false, true }
+            .ChooseWithReplacement(wireCount)
+            .Select(e => new[] { false, true }
+                    .ChooseWithReplacement(wireCount)
+                    .Select(v => v.SequenceEqual(e) ? transition(e.ToArray()) : 0)));
+    }
+    public static ComplexMatrix FromPhasingWhenTrue(int wireCount, Complex phase, params int[] conditionedWires) {
+        return FromPhasing(wireCount, e => conditionedWires.All(i => e[i]) ? phase : Complex.One);
     }
     public static ComplexMatrix MakeIdentity(int size) {
         return FromSquareData((from i in size.Range()
@@ -110,13 +126,6 @@ public struct ComplexMatrix {
                     col => r[col][row]));
         }
     }
-    public static ComplexVector operator *(ComplexVector vector, ComplexMatrix matrix) {
-        if (matrix.Span != vector.Values.Count) throw new ArgumentException();
-        return new ComplexVector(
-            matrix.Rows
-            .Select(r => new ComplexVector(r) * vector)
-            .ToArray());
-    }
     public static ComplexMatrix operator -(ComplexMatrix matrix) {
         return matrix * -1;
     }
@@ -136,10 +145,6 @@ public struct ComplexMatrix {
     public static ComplexMatrix operator /(ComplexMatrix matrix, Complex scale) {
         return FromColumns(matrix.Columns.Select(e => e.Select(c => c / scale).ToArray()).ToArray());
     }
-    public static ComplexMatrix operator *(ComplexMatrix left, ComplexMatrix right) {
-        if (left.Span != right.Span) throw new ArgumentException();
-        return new ComplexMatrix(left.Columns.Select(c => (new ComplexVector(c) * right).Values).ToArray());
-    }
     public override bool Equals(object obj) {
         return obj is ComplexMatrix && (ComplexMatrix)obj == this;
     }
@@ -148,5 +153,21 @@ public struct ComplexMatrix {
     }
     public override string ToString() {
         return Rows.Select(r => r.Select(c => "| " + c.ToPrettyString().PadRight(6)).StringJoin("") + " |").StringJoin(Environment.NewLine);
+    }
+    public static ComplexVector operator *(ComplexMatrix matrix, ComplexVector vector) {
+        return new ComplexVector(
+            matrix.Rows
+            .Select(r => new ComplexVector(r) * vector));
+    }
+    public static ComplexVector operator *(ComplexVector vector, ComplexMatrix matrix) {
+        return new ComplexVector(
+            matrix.Columns
+            .Select(r => new ComplexVector(r) * vector));
+    }
+    public static ComplexMatrix operator *(ComplexMatrix left, ComplexMatrix right) {
+        return FromColumns(
+            from c in right.Columns
+            select from r in left.Rows
+                   select new ComplexVector(r) * new ComplexVector(c));
     }
 }

@@ -84,6 +84,7 @@
     <Compile Include="Animations\Cells.cs" />
     <Compile Include="Animations\Concurrency.cs" />
     <Compile Include="Animations\BisortedGridSearch.cs" />
+    <Compile Include="Animations\ThirdPartyCommitment.cs" />
     <Compile Include="Animations\IntervalReferences.cs" />
     <Compile Include="Animations\SuperpositionVisualization.cs" />
     <Compile Include="Animations\SecureMultiPartyMult.cs" />

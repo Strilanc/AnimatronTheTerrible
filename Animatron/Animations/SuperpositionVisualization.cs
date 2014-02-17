@@ -347,8 +347,7 @@ namespace Animations {
             };
         }
         public static Animation CreateAnimation() {
-            return MakeStaticAnimation(new Point(119, 200), new Complex[] { Math.Sqrt(1 / 4.0), -Math.Sqrt(1 / 4.0), Complex.ImaginaryOne * Math.Sqrt(1 / 2.0) });
-            return CreateTelepathyAnimation();
+            return MakeStaticAnimation(new Point(119, 200), new[] { Math.Sqrt(1 / 4.0), -Math.Sqrt(1 / 4.0), Complex.ImaginaryOne * Math.Sqrt(1 / 2.0) });
         }
     }
 }

@@ -59,7 +59,6 @@ namespace Animations {
         }
 
         private static Animation MakePolyAnimation(Ani<Point> center, Ani<uint[]> value) {
-            var w = 10;
             return new Animation {
                 new TextDesc(value.Select(e => string.Format("{0}x²+{1}x+{2}",e[0],e[1],e[2])), center, new Point(0.5, 0.5))
             };

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using SnipSnap.Mathematics;
@@ -16,6 +17,13 @@ using System.Linq;
 
 namespace Animatron {
     public static class Util {
+        public static void SubscribeLife<T>(this IObservable<T> observable, Action<T> onNext, Lifetime lifetime) {
+            if (lifetime.IsImmortal) {
+                observable.Subscribe(onNext);
+            } else {
+                observable.Subscribe(onNext, lifetime);
+            }
+        }
         public static Vector Sum(this IEnumerable<Vector> vectors) {
             return vectors.Aggregate(default(Vector), (a, e) => a + e);
         }
@@ -66,7 +74,7 @@ namespace Animatron {
         }
         public static IObservable<T> Cache<T>(this IObservable<T> v, Lifetime life) {
             var r = new ObservableValue<May<T>>();
-            v.Subscribe(e => r.Update(e, false), life);
+            v.SubscribeLife(e => r.Update(e, false), life);
             return r.Where(e => e.HasValue).Select(e => e.ForceGetValue());
         }
         public static Vector Rotate(this Vector vector, Dir angle) {

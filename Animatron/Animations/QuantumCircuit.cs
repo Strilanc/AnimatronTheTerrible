@@ -23,7 +23,7 @@ namespace Animations {
             wedgeLength = wedgeLength ?? 5;
             thickness = thickness ?? 1;
             return new Animation {
-                new PointDesc(start, fill: stroke, radius: thickness.Select(e => e*1.25)),
+                new PointDesc(start, fill: stroke, radius: thickness.Select(e => e*0.5)),
                 new LineSegmentDesc(
                     pos: start.Combine(delta, (p, d) => new LineSegment(p, d)),
                     stroke: stroke,
@@ -880,11 +880,20 @@ namespace Animations {
             public int MinWire;
             public int MaxWire;
             public double Width;
+            public int[] ConditionedWires;
         }
-        public static Animation CreateCircuitAnimation(double span, TimeSpan duration, IReadOnlyList<CircuitOperationWithStyle> ops, IReadOnlyList<CircuitInputWithStyle> ins, string desc, IReadOnlyList<string[][]> wireLabels = null, string[] stateLabels = null, bool showMatrix = true, double wireSpace = 80) {
+        public static Animation CreateCircuitAnimation(double span,
+                                                       TimeSpan duration, 
+                                                       IReadOnlyList<CircuitOperationWithStyle> ops, 
+                                                       IReadOnlyList<CircuitInputWithStyle> ins, 
+                                                       string desc, 
+                                                       IReadOnlyList<string[][]> wireLabels = null, 
+                                                       string[] stateLabels = null, 
+                                                       bool showMatrix = true, 
+                                                       double wireSpace = 80) {
             var matrixFill = (Brush)Brushes.Orange.LerpToTransparent(0.5);
 
-            var vals = ins.Select(e => ops.Stream(e.Value, (a, x) => a*x.Operation, streamSeed: true).ToArray()).ToArray();
+            var vals = ins.Select(e => ops.Stream(e.Value, (a, x) => x.Operation*a, streamSeed: true).ToArray()).ToArray();
 
             var numOp = ops.Count;
             var numIn = ins.Count;
@@ -894,7 +903,7 @@ namespace Animations {
             var matrixWidth = 150.0;
             var cellRadius = matrixWidth / (vals[0][0].Values.Count + 2) / 2;
             var matrixRadius = matrixWidth / 2;
-            var opXs = numOp.Range().Select(i => -cellRadius+span*(i+1.0)/maxIn).ToArray();
+            var opXs = numOp.Range().Select(i => -cellRadius+span*(i+0.75)/maxIn).ToArray();
 
             var sweepX = Ani.Anon(t => new Point(t.DividedBy(duration).LerpTransition(-cellRadius * 2, span - cellRadius * 2), 0).Sweep(new Vector(0, 1000)));
             var opTs = opXs.Select(x => new {s = duration.Times((x - matrixRadius + cellRadius*2)/span), f = duration.Times((x + matrixRadius)/span)}).ToArray();
@@ -908,31 +917,31 @@ namespace Animations {
                              fontSize: 15,
                              foreground: Brushes.Gray),
                 // wires
-                wireYs.Select(y => new LineSegmentDesc(new Point(0, y).Sweep(new Vector(1000, 0))))
+                wireYs.Select(y => new LineSegmentDesc(new Point(0, y).Sweep(new Vector(span+300, 0))))
             };
             if (showMatrix) {
                 // static matrices
                 animation.Add(
                     numOp.Range()
                          .Select(i => ShowMatrix(
-                             new Rect(opXs[i] - matrixRadius, 100, matrixRadius*2, matrixRadius*2),
+                             new Rect(opXs[i] - matrixRadius, wireSpace+20, matrixRadius*2, matrixRadius*2),
                              ops[i].Operation,
                              matrixFill,
                              Brushes.Black)));
             }
 
             var offsetTimelines =
-                maxIn.Range()
+                ins.Count.Range()
                      .Select(
                          i => animation
                                   .Dilated(
                                       1.Seconds(),
-                                      -duration.DividedBy(maxIn).Times(i))
+                                      -duration.DividedBy(ins.Count).Times(i))
                                   .Periodic(duration))
                      .ToArray();
 
             // sweep line
-            foreach (var p in offsetTimelines.Take(numIn)) {
+            foreach (var p in offsetTimelines) {
                 p.Add(new LineSegmentDesc(sweepX, Brushes.Red, 0.5, 4));
             }
 
@@ -955,11 +964,11 @@ namespace Animations {
                 foreach (var j in numWire.Range()) {
                     animation.Add(
                         new TextDesc(
-                            Ani.Anon(t => (t + duration.DividedBy(maxIn).Times(i)).Mod(duration))
+                            Ani.Anon(t => (t + duration.DividedBy(numIn).Times(i)).Mod(duration))
                                .Select(t => wd[i][j][tts.TakeWhile(c => t >= c).Count()]),
                             Ani.Anon(
                                 t =>
-                                new Point((t.DividedBy(duration) + i * 1.0 / maxIn).ProperMod(1).LerpTransition(-cellRadius * 2, span - cellRadius * 2), wireYs[j]))));
+                                new Point((t.DividedBy(duration) + i * 1.0 / numIn).ProperMod(1).LerpTransition(-cellRadius * 2, span - cellRadius * 2), wireYs[j]))));
                 }
             }
 
@@ -968,7 +977,7 @@ namespace Animations {
                 foreach (var i in numIn.Range()) {
                     foreach (var j in numOp.Range()) {
                         var p = offsetTimelines[i].LimitedNewTime(opTs[j].s, opTs[j].f);
-                        var r = new Rect(opXs[j] - matrixRadius, 100, matrixRadius*2, matrixRadius*2);
+                        var r = new Rect(opXs[j] - matrixRadius, wireSpace + 20, matrixRadius * 2, matrixRadius * 2);
                         p.Add(
                             ShowMatrixMultiplication(
                                 opTs[j].f - opTs[j].s,
@@ -992,7 +1001,7 @@ namespace Animations {
                                 ins[i].Color,
                                 Brushes.Black,
                                 vals[i][s].Values[j],
-                                sweepX.Select(e => new Point(e.LerpAcross(0.3).X + cellRadius, 100 + cellRadius) + new Vector(0, j*cellRadius*2)),
+                                sweepX.Select(e => new Point(e.LerpAcross(0.3).X + cellRadius, wireSpace + 20 + cellRadius) + new Vector(0, j * cellRadius * 2)),
                                 cellRadius)));
                     }
                 }
@@ -1013,7 +1022,7 @@ namespace Animations {
                     animation.Add(
                         new TextDesc(
                             stateLabels[i] + ":",
-                            new Point(0, 100 + cellRadius + i*2*cellRadius),
+                            new Point(0, wireSpace + 20 + cellRadius + i*2*cellRadius),
                             new Point(0, 0.5)));
                 }
             }
@@ -1021,12 +1030,24 @@ namespace Animations {
             // circuit diagram
             foreach (var i in numOp.Range()) {
                 var op = ops[i];
-                var h = (numWire == 1 ? 40 : op.MaxWire - op.MinWire == numWire - 1 ? wireSpace : (wireYs[1] - wireYs[0]) * (op.MaxWire - op.MinWire + 1)) * 0.9;
+                var h = (numWire == 1 ? 50 : op.MaxWire - op.MinWire == numWire - 1 ? wireSpace*0.80 : (wireYs[1] - wireYs[0]) * (op.MaxWire - op.MinWire + 1)) * 0.9;
                 var r = new Rect(
                     opXs[i] - op.Width/2,
                     (wireYs[op.MaxWire] + wireYs[op.MinWire] - h)/2,
                     op.Width,
                     h);
+                foreach (var c in op.ConditionedWires ?? new int[0]) {
+                    animation.Add(
+                        new LineSegmentDesc(
+                            new Point(opXs[i], wireYs[op.MaxWire]).To(new Point(opXs[i], wireYs[c])),
+                            Brushes.Black,
+                            1));
+                    animation.Add(
+                        new PointDesc(
+                            new Point(opXs[i], wireYs[c]),
+                            fill: Brushes.Black,
+                            radius: 3));
+                }
                 animation.Add(
                     new RectDesc(
                         r,
@@ -1054,6 +1075,87 @@ namespace Animations {
             }
 
             return animation;
+        }
+        public static Animation CreateFourierAnimation() {
+            Func<int, ComplexMatrix> H = n => ComplexMatrix.MakeUnitaryHadamard(1).ExpandToApplyToMoreWires(3, new[] {n});
+            Func<int, int, ComplexMatrix> Rk = (n, k) => ComplexMatrix.FromPhasingWhenTrue(3, Complex.Exp(-Complex.ImaginaryOne * 2 * Math.PI / Math.Pow(2, k)), n, n + k - 1);
+            Func<int, ComplexMatrix> s1 = n => Rk(n, 2);
+            Func<int, ComplexMatrix> s2 = n => Rk(n, 3);
+            var revBits = ComplexMatrix.FromTransitions(3, e => e.Reverse().ToArray());
+            var i = Complex.ImaginaryOne;
+
+
+            Func<int, ComplexVector> toFreq = f => new ComplexVector(8.Range().Select(e => Complex.Exp(i * e * f * 2 * Math.PI / 8) / Math.Sqrt(8)));
+
+            return CreateCircuitAnimation(
+                span: 1400,
+                duration: 20.Seconds(),
+                ops: new[] {
+                    new CircuitOperationWithStyle {
+                        Description="Reverse" + Environment.NewLine + "Bits",
+                        MinWire=0,
+                        MaxWire=2,
+                        Operation=revBits,
+                        Width=120
+                    },
+                    new CircuitOperationWithStyle {
+                        Description="H",
+                        MinWire=0,
+                        MaxWire=0,
+                        Operation=H(0),
+                        Width=80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description="R(-90°)",
+                        MinWire=1,
+                        MaxWire=1,
+                        ConditionedWires = new[] {0},
+                        Operation=s1(0),
+                        Width=80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description="R(-45°)",
+                        MinWire=2,
+                        MaxWire=2,
+                        Operation=s2(0),
+                        ConditionedWires = new[] {0},
+                        Width=80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description="H",
+                        MinWire=1,
+                        MaxWire=1,
+                        Operation=H(1),
+                        Width=80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description="R(-90°)",
+                        MinWire=2,
+                        MaxWire=2,
+                        ConditionedWires = new[] {1},
+                        Operation=s1(1),
+                        Width=80
+                    },
+                    new CircuitOperationWithStyle {
+                        Description="H",
+                        MinWire=2,
+                        MaxWire=2,
+                        Operation=H(2),
+                        Width=80
+                    }
+                },
+                ins: new CircuitInputWithStyle {
+                        Value = toFreq(2),
+                        Color = Brushes.Blue.LerpToTransparent(0.7)
+                    }.Repeat(4).ToArray(),
+                desc: "Quantum Fourier Transform",
+                stateLabels: new[] {"0", "1"}.ChooseWithReplacement(3).Select(e => e.Reverse().StringJoin("")).ToArray(),
+                wireLabels: new[] {"Off", "On"}.Repeat(8).ToArray().Repeat(3).ToArray(),
+                showMatrix: true,
+                wireSpace: 120);
+        }
+        public static Animation CreateAnimation() {
+            return CreateFourierAnimation();
         }
     }
 }

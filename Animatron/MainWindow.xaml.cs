@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -10,25 +9,12 @@ using TwistedOak.Util;
 using System.Reactive.Linq;
 using Strilanc.LinqToCollections;
 using System.Linq;
-using SnipSnap.Mathematics;
 
 namespace Animatron {
     public partial class MainWindow {
         public MainWindow() {
-            //using (var f = File.Open("C:\\Users\\Craig\\Documents\\GifRecordings\\634965148361216632.gif", FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite)) {
-            //    using (var f2 = File.Open("C:\\Users\\Craig\\Documents\\GifRecordings\\LOOP634965148361216632.gif",
-            //                           FileMode.OpenOrCreate,
-            //                           FileAccess.ReadWrite,
-            //                           FileShare.ReadWrite)) {
-            //        f.LoopGif(f2);
-            //        return;
-            //        f.AdjustEncodedGif(50.Milliseconds());
-            //    }
-            //}
-            //return;
-            
             var life = Lifetime.Immortal;
-            var animation = Animations.IntervalReferences.CreateAnimation();
+            var animation = Animations.QuantumCircuit.CreateAnimation();
 
             InitializeComponent();
             var isRecording = new ObservableValue<bool>();
@@ -109,12 +95,14 @@ namespace Animatron {
                     encoder.Frames.Add(BitmapFrame.Create(rtb));
                 }
 
-                var step = new Step(
-                    previousTotalElapsedTime: t,
-                    timeStep: stepdt);
+                if (recording.Current) {
+                    var step = new Step(
+                        previousTotalElapsedTime: t,
+                        timeStep: stepdt);
 
-                foreach (var e in animation.StepActions.CurrentItems())
-                    e.Value.Invoke(step);
+                    foreach (var e in animation.StepActions.CurrentItems())
+                        e.Value.Invoke(step);
+                }
 
                 await Task.Delay(stepdt);
             }

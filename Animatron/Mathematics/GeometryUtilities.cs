@@ -34,6 +34,52 @@ namespace SnipSnap.Mathematics {
             return new LineSegment(start, delta);
         }
 
+        public static bool ContainsPoint(this LineSegment line, Point targetPoint) {
+            return targetPoint.DistanceFrom(targetPoint.ClosestPointOn(line)) < 0.001;
+        }
+        public static bool IsParallelTo(this Vector v1, Vector v2) {
+            var d = (v1*v2)*(v1*v2);
+            var b = (v1*v1)*(v2*v2);
+            return Math.Abs(d - b) < 0.001;
+        }
+        public static Point IntersectionPoint(this LineSegment line1, LineSegment line2) {
+            var p = line1.TryIntersectionPoint(line2);
+            if (p == null) throw new InvalidOperationException();
+            return p.Value;
+        }
+        public static Point? TryIntersectionPointInside(this LineSegment line1, LineSegment line2) {
+            var p = TryIntersectionPoint(line1, line2);
+            if (!p.HasValue) return null;
+            var q = p.Value;
+            if (q.DistanceFrom(line1.Start) < 0.001) return null;
+            if (q.DistanceFrom(line1.End) < 0.001) return null;
+            if (q.DistanceFrom(line2.Start) < 0.001) return null;
+            if (q.DistanceFrom(line2.End) < 0.001) return null;
+            return q;
+        }
+        public static Point? TryIntersectionPoint(this LineSegment line1, LineSegment line2) {
+            if (line1.Delta.IsParallelTo(line2.Delta)) return null;
+
+            //[solve intersection in 2d, then transform back]
+            //create transformed coordinate axies [x along L1, y along L2 (with x component removed), z=0]
+            var u_x = line1.Delta.Normal();
+            var u_y = line2.Delta.PerpOnto(u_x).Normal();
+            //transform L2's direction vector
+            var u_L2_dir = new Vector(line2.Delta.ScalarProjectOnto(u_x), line2.Delta.ScalarProjectOnto(u_y));
+            if (u_L2_dir.Y.Abs() < 0.001) return null;
+            //get the transformed y-distance between L1 and L2's starting points, and convert it to a time
+            var u_L1_L2_dy = (line1.Start - line2.Start).ScalarProjectOnto(u_y);
+            var u_t = u_L1_L2_dy/u_L2_dir.Y;
+            //get the transformed intersection point
+            var c_2d = u_L2_dir * u_t;
+            //transform intersection point back to normal coordinates
+            var c_3d = line2.Start + c_2d.X * u_x + c_2d.Y * u_y;
+
+            //check that 2d intersection is in fact a 3d intersection
+            if (!line1.ContainsPoint(c_3d)) return null;
+            if (!line2.ContainsPoint(c_3d)) return null;
+            return c_3d;
+        }
         public struct IntersectionParameters {
             public double T;
             public double S;

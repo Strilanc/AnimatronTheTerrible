@@ -38,10 +38,10 @@ namespace Animatron {
         public void Link(PerishableCollection<UIElement> controls, IObservable<TimeSpan> pulse, Lifetime life) {
             LifetimeSource active = null;
             var v = new ObservableValue<TimeSpan>();
-            pulse.Select(_timeTransformFromOutsideToInside).Subscribe(e => {
+            pulse.Select(_timeTransformFromOutsideToInside).SubscribeLife(e => {
                 if (active == null && e.HasValue) {
                     active = life.CreateDependentSource();
-                    Things.CurrentAndFutureItems().Subscribe(x => x.Value.Link(controls, v, x.Lifetime.Min(active.Lifetime)), active.Lifetime);
+                    Things.CurrentAndFutureItems().SubscribeLife(x => x.Value.Link(controls, v, x.Lifetime.Min(active.Lifetime)), active.Lifetime);
                 } else if (active != null && !e.HasValue) {
                     active.EndLifetime();
                     active = null;
